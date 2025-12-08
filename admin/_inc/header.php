@@ -800,7 +800,7 @@ $currentUser = getCurrentUser();
             <nav class="admin-header-nav" id="admin-header-nav">
                 <a href="<?= ADMIN_URL ?>/index.php">Dashboard</a>
                 <a href="<?= ADMIN_URL ?>/list.php">Productos</a>
-                <a href="<?= ADMIN_URL ?>/add.php">Nuevo Producto</a>
+                <a href="<?= ADMIN_URL ?>/ordenar.php">Ordenar</a>
                 <a href="<?= ADMIN_URL ?>/galeria/list.php">Galería</a>
                 <a href="<?= ADMIN_URL ?>/logout.php" class="logout-btn">Salir</a>
             </nav>

@@ -71,32 +71,28 @@ foreach ($products as $index => $product) {
         </div>
     </div>
     
-    <!-- Filtros por categoría -->
-    <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
-        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-            <span style="font-weight: 600; color: #333;">Categoría:</span>
+    <!-- Filtros por categoría - Pestañas tipo navegador -->
+    <div class="tabs-container">
+        <div class="tabs-wrapper">
             <a href="?categoria=productos" 
-               class="categoria-filter <?= $categoriaFiltro === 'productos' ? 'active' : '' ?>"
-               style="padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-weight: 600; transition: all 0.3s;">
+               class="tab <?= $categoriaFiltro === 'productos' ? 'active' : '' ?>">
                 PRODUCTOS
             </a>
-            <span style="color: #ccc;">|</span>
             <a href="?categoria=souvenirs" 
-               class="categoria-filter <?= $categoriaFiltro === 'souvenirs' ? 'active' : '' ?>"
-               style="padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-weight: 600; transition: all 0.3s;">
+               class="tab <?= $categoriaFiltro === 'souvenirs' ? 'active' : '' ?>">
                 SOUVENIRS
             </a>
-            <span style="color: #ccc;">|</span>
             <a href="?categoria=navidad" 
-               class="categoria-filter <?= $categoriaFiltro === 'navidad' ? 'active' : '' ?>"
-               style="padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-weight: 600; transition: all 0.3s;">
+               class="tab <?= $categoriaFiltro === 'navidad' ? 'active' : '' ?>">
                 NAVIDAD
             </a>
         </div>
-        <p style="margin: 0.75rem 0 0 0; color: #666; font-size: 0.9rem;">
-            <strong>Instrucciones:</strong> Arrastra y suelta las imágenes de los productos para cambiar su orden. 
-            Los productos se mostrarán en filas de 4 columnas. Haz clic en "Guardar Orden" cuando termines.
-        </p>
+        <div class="tabs-content">
+            <p style="margin: 0; color: #666; font-size: 0.9rem; padding: 1rem 0;">
+                <strong>Instrucciones:</strong> Arrastra y suelta las imágenes de los productos para cambiar su orden. 
+                Los productos se mostrarán en filas de 4 columnas. Haz clic en "Guardar Orden" cuando termines.
+            </p>
+        </div>
     </div>
     
     <?php if (empty($products)): ?>
@@ -129,22 +125,55 @@ foreach ($products as $index => $product) {
     <?php endif; ?>
     
     <div id="products-grid" class="products-sortable-grid">
-        <?php foreach ($products as $product): ?>
+        <?php foreach ($products as $index => $product): ?>
             <div class="product-sortable-card" 
                  draggable="true" 
                  data-id="<?= htmlspecialchars($product['id']) ?>"
-                 data-orden="<?= htmlspecialchars($product['orden'] ?? '') ?>">
+                 data-orden="<?= htmlspecialchars($product['orden'] ?? '') ?>"
+                 data-index="<?= $index ?>">
                 <?php if (!empty($product['image'])): ?>
                     <?php 
                     $imageUrl = preg_replace('/\?.*$/', '', $product['image']);
                     $fullImageUrl = BASE_URL . $imageUrl;
                     ?>
-                    <img src="<?= $fullImageUrl ?>" 
-                         alt="<?= htmlspecialchars($product['name']) ?>"
-                         onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'200\'%3E%3Crect fill=\'%23f0f0f0\' width=\'200\' height=\'200\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%23999\' font-size=\'14\'%3ESin img%3C/text%3E%3C/svg%3E';">
+                    <div style="position: relative;">
+                        <img src="<?= $fullImageUrl ?>" 
+                             alt="<?= htmlspecialchars($product['name']) ?>"
+                             onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'200\'%3E%3Crect fill=\'%23f0f0f0\' width=\'200\' height=\'200\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%23999\' font-size=\'14\'%3ESin img%3C/text%3E%3C/svg%3E';">
+                        <!-- Botones móvil: solo visibles en pantallas pequeñas, dentro del contenedor de imagen -->
+                        <div class="mobile-controls">
+                            <button type="button" class="btn-move btn-move-up" 
+                                    data-id="<?= htmlspecialchars($product['id']) ?>"
+                                    <?= $index === 0 ? 'disabled' : '' ?>
+                                    title="Mover arriba">
+                                ↑
+                            </button>
+                            <button type="button" class="btn-move btn-move-down" 
+                                    data-id="<?= htmlspecialchars($product['id']) ?>"
+                                    <?= $index === count($products) - 1 ? 'disabled' : '' ?>
+                                    title="Mover abajo">
+                                ↓
+                            </button>
+                        </div>
+                    </div>
                 <?php else: ?>
-                    <div class="product-placeholder">
+                    <div class="product-placeholder" style="position: relative;">
                         Sin imagen
+                        <!-- Botones móvil también para productos sin imagen -->
+                        <div class="mobile-controls">
+                            <button type="button" class="btn-move btn-move-up" 
+                                    data-id="<?= htmlspecialchars($product['id']) ?>"
+                                    <?= $index === 0 ? 'disabled' : '' ?>
+                                    title="Mover arriba">
+                                ↑
+                            </button>
+                            <button type="button" class="btn-move btn-move-down" 
+                                    data-id="<?= htmlspecialchars($product['id']) ?>"
+                                    <?= $index === count($products) - 1 ? 'disabled' : '' ?>
+                                    title="Mover abajo">
+                                ↓
+                            </button>
+                        </div>
                     </div>
                 <?php endif; ?>
                 <div class="product-sortable-name">
@@ -158,6 +187,94 @@ foreach ($products as $index => $product) {
 </div>
 
 <style>
+/* Pestañas tipo navegador */
+.tabs-container {
+    background: white;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.tabs-wrapper {
+    display: flex;
+    background: #f0f0f0;
+    border-bottom: 1px solid #ddd;
+    padding: 0;
+    margin: 0;
+    gap: 0;
+}
+
+.tab {
+    padding: 0.75rem 1.5rem;
+    text-decoration: none;
+    font-weight: 600;
+    color: #666;
+    background: #f0f0f0;
+    border: none;
+    border-top: 3px solid transparent;
+    border-right: 1px solid #ddd;
+    transition: all 0.2s ease;
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tab:last-child {
+    border-right: none;
+}
+
+.tab:hover {
+    background: #e8e8e8;
+    color: #333;
+}
+
+.tab.active {
+    background: white;
+    color: #e0a4ce;
+    border-top-color: #e0a4ce;
+    border-bottom: 1px solid white;
+    margin-bottom: -1px;
+    z-index: 1;
+}
+
+.tab.active:hover {
+    background: white;
+    color: #d89bc0;
+}
+
+.tabs-content {
+    padding: 0 1.5rem;
+    background: white;
+}
+
+/* Responsive para pestañas */
+@media (max-width: 768px) {
+    .tabs-wrapper {
+        flex-wrap: wrap;
+    }
+    
+    .tab {
+        flex: 1;
+        min-width: 0;
+        padding: 0.6rem 0.75rem;
+        font-size: 0.8rem;
+        text-align: center;
+        border-right: 1px solid #ddd;
+    }
+    
+    .tab:last-child {
+        border-right: 1px solid #ddd;
+    }
+    
+    .tabs-content {
+        padding: 0 1rem;
+    }
+}
+
 .products-sortable-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -174,6 +291,54 @@ foreach ($products as $index => $product) {
     transition: all 0.3s;
     position: relative;
     overflow: hidden;
+}
+
+/* Controles móvil - ocultos en desktop */
+.mobile-controls {
+    display: none;
+    position: absolute;
+    top: 50%;
+    right: 0.5rem;
+    transform: translateY(-50%);
+    z-index: 10;
+    gap: 0.25rem;
+    flex-direction: column;
+}
+
+.btn-move {
+    background: rgba(224, 164, 206, 0.9);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    transition: all 0.2s;
+    padding: 0;
+    line-height: 1;
+}
+
+.btn-move:hover:not(:disabled) {
+    background: rgba(216, 155, 192, 1);
+    transform: scale(1.1);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+}
+
+.btn-move:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+.btn-move:disabled {
+    background: rgba(200, 200, 200, 0.5);
+    color: rgba(255, 255, 255, 0.5);
+    cursor: not-allowed;
+    box-shadow: none;
 }
 
 .product-sortable-card:hover {
@@ -241,17 +406,47 @@ foreach ($products as $index => $product) {
     
     .product-sortable-card {
         padding: 0.75rem;
+        cursor: default; /* Desactivar cursor move en mobile */
     }
     
     .product-sortable-card img,
     .product-placeholder {
         height: 150px;
     }
+    
+    /* Mostrar controles móvil */
+    .mobile-controls {
+        display: flex;
+        flex-direction: column;
+        top: 50%;
+        right: 0.5rem;
+        transform: translateY(-50%);
+    }
+    
+    /* Hacer las cards no arrastrables en mobile (el drag and drop no funciona bien) */
+    .product-sortable-card {
+        -webkit-user-drag: none;
+        user-select: none;
+    }
 }
 
 @media (max-width: 480px) {
     .products-sortable-grid {
         grid-template-columns: 1fr;
+    }
+    
+    .mobile-controls {
+        display: flex;
+        flex-direction: column; /* Mantener en columna también en móvil pequeño */
+        top: 50%;
+        right: 0.5rem;
+        transform: translateY(-50%);
+    }
+    
+    .btn-move {
+        width: 36px;
+        height: 36px;
+        font-size: 1.3rem;
     }
 }
 </style>
@@ -264,15 +459,81 @@ foreach ($products as $index => $product) {
     let draggedElement = null;
     let hasChanges = false;
     
-    // Hacer todas las cards arrastrables
-    const cards = grid.querySelectorAll('.product-sortable-card');
-    cards.forEach(card => {
-        card.addEventListener('dragstart', handleDragStart);
-        card.addEventListener('dragend', handleDragEnd);
-        card.addEventListener('dragover', handleDragOver);
-        card.addEventListener('drop', handleDrop);
-        card.addEventListener('dragenter', handleDragEnter);
-        card.addEventListener('dragleave', handleDragLeave);
+    // Detectar si es mobile
+    const isMobile = window.innerWidth <= 768;
+    
+    // Hacer todas las cards arrastrables (solo en desktop)
+    if (!isMobile) {
+        const cards = grid.querySelectorAll('.product-sortable-card');
+        cards.forEach(card => {
+            card.addEventListener('dragstart', handleDragStart);
+            card.addEventListener('dragend', handleDragEnd);
+            card.addEventListener('dragover', handleDragOver);
+            card.addEventListener('drop', handleDrop);
+            card.addEventListener('dragenter', handleDragEnter);
+            card.addEventListener('dragleave', handleDragLeave);
+        });
+    }
+    
+    // Funciones para mover productos con botones (mobile)
+    function moveProductUp(productId) {
+        const cards = Array.from(grid.querySelectorAll('.product-sortable-card'));
+        const currentIndex = cards.findIndex(card => card.getAttribute('data-id') === productId);
+        
+        if (currentIndex > 0) {
+            const currentCard = cards[currentIndex];
+            const previousCard = cards[currentIndex - 1];
+            
+            grid.insertBefore(currentCard, previousCard);
+            updateMoveButtons();
+            hasChanges = true;
+            saveBtn.style.display = 'inline-block';
+        }
+    }
+    
+    function moveProductDown(productId) {
+        const cards = Array.from(grid.querySelectorAll('.product-sortable-card'));
+        const currentIndex = cards.findIndex(card => card.getAttribute('data-id') === productId);
+        
+        if (currentIndex < cards.length - 1) {
+            const currentCard = cards[currentIndex];
+            const nextCard = cards[currentIndex + 1];
+            
+            grid.insertBefore(currentCard, nextCard.nextSibling);
+            updateMoveButtons();
+            hasChanges = true;
+            saveBtn.style.display = 'inline-block';
+        }
+    }
+    
+    function updateMoveButtons() {
+        const cards = Array.from(grid.querySelectorAll('.product-sortable-card'));
+        cards.forEach((card, index) => {
+            const upBtn = card.querySelector('.btn-move-up');
+            const downBtn = card.querySelector('.btn-move-down');
+            
+            if (upBtn) {
+                upBtn.disabled = index === 0;
+            }
+            if (downBtn) {
+                downBtn.disabled = index === cards.length - 1;
+            }
+        });
+    }
+    
+    // Event listeners para botones móvil
+    document.querySelectorAll('.btn-move-up').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const productId = this.getAttribute('data-id');
+            moveProductUp(productId);
+        });
+    });
+    
+    document.querySelectorAll('.btn-move-down').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const productId = this.getAttribute('data-id');
+            moveProductDown(productId);
+        });
     });
     
     function handleDragStart(e) {
