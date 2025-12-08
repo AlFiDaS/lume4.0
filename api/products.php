@@ -82,8 +82,23 @@ try {
         $params['slug'] = $slug;
     }
     
-    // Ordenamiento
-    $sql .= " ORDER BY destacado DESC, name ASC";
+    // Ordenamiento: primero por orden (si existe), luego destacado, luego nombre
+    // Verificar si la columna orden existe antes de usarla
+    try {
+        $checkOrden = fetchOne("SHOW COLUMNS FROM products LIKE 'orden'");
+        if ($checkOrden) {
+            $sql .= " ORDER BY 
+                CASE WHEN orden IS NULL THEN 1 ELSE 0 END,
+                orden ASC,
+                destacado DESC, 
+                name ASC";
+        } else {
+            $sql .= " ORDER BY destacado DESC, name ASC";
+        }
+    } catch (Exception $e) {
+        // Si hay error, usar ordenamiento simple
+        $sql .= " ORDER BY destacado DESC, name ASC";
+    }
     
     // Límite opcional
     if (!empty($_GET['limit'])) {

@@ -71,6 +71,12 @@ $recentProducts = fetchAll(
                 <div class="action-desc">Ver y gestionar productos</div>
             </a>
             
+            <a href="ordenar.php" class="action-card">
+                <div class="action-icon">🔄</div>
+                <div class="action-title">Ordenar Productos</div>
+                <div class="action-desc">Reordenar productos arrastrando</div>
+            </a>
+            
             <a href="galeria/list.php" class="action-card">
                 <div class="action-icon">🖼️</div>
                 <div class="action-title">Galería de Ideas</div>
