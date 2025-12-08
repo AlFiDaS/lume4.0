@@ -1,0 +1,61 @@
+# ============================================
+# Configuración Apache para LUME
+# ============================================
+
+# Activar RewriteEngine
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    
+    # Redirigir a HTTPS (opcional, descomenta si usas SSL)
+    # RewriteCond %{HTTPS} off
+    # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# Proteger archivos sensibles
+<FilesMatch "^(config|db|auth|upload|slugify|cache-bust)\.php$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Proteger carpeta helpers
+<IfModule mod_rewrite.c>
+    RewriteRule ^helpers/ - [F,L]
+</IfModule>
+
+# Headers de seguridad
+<IfModule mod_headers.c>
+    # Prevenir clickjacking
+    Header set X-Frame-Options "SAMEORIGIN"
+    
+    # Prevenir MIME type sniffing
+    Header set X-Content-Type-Options "nosniff"
+    
+    # XSS Protection
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# Configuración PHP (si está permitido)
+<IfModule mod_php7.c>
+    php_value upload_max_filesize 5M
+    php_value post_max_size 5M
+    php_value max_execution_time 300
+    php_value max_input_time 300
+</IfModule>
+
+# Compresión GZIP
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+</IfModule>
+
+# Cache para archivos estáticos
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+</IfModule>
+

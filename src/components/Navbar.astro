@@ -1,0 +1,227 @@
+---
+const links = [
+  { href: '/', text: 'Inicio' },
+  { href: '/productos', text: 'Productos' },
+  { href: '/navidad', text: 'Navidad' },
+  { href: '/souvenirs', text: 'Souvenirs' },
+  { href: '/ideas', text: 'Galeria de Ideas' },
+];
+---
+
+<nav>
+  <div class="nav-container">
+    <!-- Izquierda: logo -->
+    <a href="/" class="logo">
+      <img src="/images/lume-logo.png" alt="Lume Logo" />
+    </a>
+ <!-- Centro: menú hamburguesa (solo mobile) -->
+    <button id="menu-toggle" class="menu-toggle" aria-label="Abrir menú">
+      ☰
+    </button>
+
+    <!-- Derecha: solo en desktop (links + carrito) -->
+    <div class="nav-desktop-right">
+      <ul class="nav-links desktop">
+        {links.map((link) => (
+          <li><a href={link.href}>{link.text}</a></li>
+        ))}
+      </ul>
+
+      <a href="/carrito" class="carrito-icon desktop-cart">
+        🛒 <span id="cart-count">0</span>
+      </a>
+    </div>
+
+    <!-- Carrito en mobile (separado) -->
+    <a href="/carrito" class="carrito-icon mobile-cart">
+      🛒 <span id="cart-count-mobile">0</span>
+    </a>
+  </div>
+
+  <!-- Menú desplegable en mobile -->
+  <ul id="nav-links" class="nav-links mobile">
+    {links.map((link) => (
+      <li><a href={link.href}>{link.text}</a></li>
+    ))}
+  </ul>
+</nav>
+
+<script is:inline>
+  // Esperar a que cart.js esté cargado
+  document.addEventListener('DOMContentLoaded', function() {
+    // Actualizar contador del carrito
+    if (typeof window.updateCartCount === 'function') {
+      window.updateCartCount();
+    }
+
+    const toggle = document.getElementById('menu-toggle');
+    const navLinks = document.getElementById('nav-links');
+
+    if (toggle && navLinks) {
+      toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        navLinks.classList.toggle('open');
+      });
+
+      document.addEventListener('click', (e) => {
+        if (navLinks.classList.contains('open') && !navLinks.contains(e.target) && e.target.id !== 'menu-toggle') {
+          navLinks.classList.remove('open');
+        }
+      });
+    }
+  });
+</script>
+<style>
+  nav {
+    background-color: #fff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+
+  .nav-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0.6rem 2rem;
+    position: relative;
+  }
+
+  .logo img {
+    height: 40px;
+  }
+
+  .menu-toggle {
+    font-size: 1.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: none;
+  }
+
+  .carrito-icon {
+    position: relative;
+    font-size: 1.4rem;
+    text-decoration: none;
+    color: #333;
+  }
+
+   #cart-count,
+  #cart-count-mobile {
+    background: #e0a4ce;
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 50%;
+    position: absolute;
+    top: -10px;
+    right: -12px;
+  }
+  ul.nav-links {
+    list-style: none;
+    gap: 1rem;
+    padding: 0;
+    margin: 0;
+  }
+
+  ul.nav-links li a {
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+    transition: color 0.3s;
+  }
+
+  ul.nav-links li a:hover {
+    color: #e0a4ce;
+  }
+
+  /* MOBILE */
+  @media (max-width: 767px) {
+    .menu-toggle {
+      display: block;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .nav-desktop-right {
+      display: none;
+    }
+
+    .desktop-cart {
+      display: none;
+    }
+
+    .mobile-cart {
+      display: block;
+    }
+
+    .nav-links.desktop {
+      display: none !important;
+    }
+
+    .nav-links.mobile {
+      display: none;
+      flex-direction: column;
+      padding: 1rem 2rem;
+      background: white;
+      border: 1px solid #eee;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      z-index: 1001;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+      text-align: center;
+    }
+
+    .nav-links.mobile.open {
+      display: flex;
+    }
+
+    .nav-links.mobile li {
+      margin-bottom: 0.5rem;
+    }
+
+    ul.nav-links li {
+      width: 100%;
+    }
+
+    ul.nav-links li a {
+      display: block;
+      width: 100%;
+      padding: 0.75rem 1rem;
+      text-align: center;
+    }
+  }
+
+  /* DESKTOP */
+  @media (min-width: 768px) {
+    .menu-toggle {
+      display: none;
+    }
+
+    .nav-container {
+      justify-content: space-between;
+    }
+
+    .nav-desktop-right {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .nav-links.desktop {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .nav-links.mobile,
+    .mobile-cart {
+      display: none !important;
+    }
+  }
+</style>

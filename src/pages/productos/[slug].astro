@@ -1,0 +1,93 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import InfoVelas from '../../components/InfoVelas.astro';
+import Breadcrumb from '../../components/Breadcrumb.astro';
+
+// Desactivar prerenderizado para carga dinámica desde la API
+export const prerender = false;
+
+// Obtener el slug de la URL
+const slug = Astro.params.slug || '';
+---
+
+<Layout>
+  <div class="pagina-producto">
+    <div id="breadcrumb-container"></div>
+
+    <!-- Producto Grid -->
+    <section class="producto-grid">
+      <div class="container">
+        <div id="product-detail-container" class="product-detail-container">
+          <!-- El producto se cargará dinámicamente aquí -->
+        </div>
+      </div>
+    </section>
+
+    <InfoVelas />
+  </div>
+
+  <script is:inline define:vars={{ slug }}>
+    // Cargar el script de detalle de producto
+    (function() {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initDetail);
+      } else {
+        initDetail();
+      }
+      
+      function initDetail() {
+        // Cargar el script si no está cargado
+        if (!window.initProductDetail) {
+          const script = document.createElement('script');
+          script.src = '/js/product-detail.js';
+          script.onload = function() {
+            if (window.initProductDetail && slug) {
+              window.initProductDetail(slug, {
+                containerSelector: '#product-detail-container',
+                autoLoad: true
+              }).then(() => {
+                updateBreadcrumb();
+              });
+            }
+          };
+          document.body.appendChild(script);
+        } else {
+          if (slug) {
+            window.initProductDetail(slug, {
+              containerSelector: '#product-detail-container',
+              autoLoad: true
+            }).then(() => {
+              updateBreadcrumb();
+            });
+          }
+        }
+      }
+      
+      function updateBreadcrumb() {
+        const container = document.getElementById('breadcrumb-container');
+        const productContainer = document.getElementById('product-detail-container');
+        
+        if (container && productContainer) {
+          const h1 = productContainer.querySelector('h1');
+          const categoria = window.location.pathname.includes('/productos/') ? 'productos' :
+                           window.location.pathname.includes('/souvenirs/') ? 'souvenirs' :
+                           window.location.pathname.includes('/navidad/') ? 'navidad' : 'productos';
+          
+          const productName = h1 ? h1.textContent : 'Producto';
+          
+          container.innerHTML = `
+            <div class="breadcrumb">
+              <div class="container">
+                <a href="/">Inicio</a>
+                <span class="separator">/</span>
+                <a href="/${categoria}">${categoria.charAt(0).toUpperCase() + categoria.slice(1)}</a>
+                <span class="separator">/</span>
+                <span class="current">${productName}</span>
+              </div>
+            </div>
+          `;
+        }
+      }
+    })();
+  </script>
+</Layout>

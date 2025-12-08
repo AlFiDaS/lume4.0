@@ -1,0 +1,159 @@
+---
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+
+export interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  canonical?: string;
+}
+
+const { 
+  title = "Lume - Velas Artesanales Artesanales de Corrientes",
+  description = "Descubrí nuestras velas artesanales únicas, souvenirs personalizados y velas aromáticas. Envíos a todo el país desde Corrientes.",
+  image = "/images/hero.webp",
+  canonical = ""
+} = Astro.props;
+
+const canonicalURL = canonical ? new URL(canonical, Astro.site) : Astro.url;
+---
+
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- 🎯 SEO OPTIMIZADO -->
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content="index, follow" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <link rel="canonical" href={canonicalURL} />
+    
+    <!-- 🖼️ OPEN GRAPH -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={new URL(image, Astro.site)} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_AR" />
+    
+    <!-- 🐦 TWITTER CARD -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={new URL(image, Astro.site)} />
+    
+    <!-- 🔗 FAVICON Y MANIFEST -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/images/lume-logo.png" />
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- 🚀 PRELOADS CRÍTICOS -->
+    <link rel="preload" href="/global.css?v=2.1.0-2025-09-03T22-17-43-2025-09-03T22-16-50-2025-09-03T22-13-49" as="style" />
+    <link rel="preload" href="/js/cart.js?v=2.1.0-2025-09-03T22-17-43-2025-09-03T22-16-50-2025-09-03T22-13-49" as="script" />
+    <link rel="preload" href="/images/hero.webp" as="image" />
+    
+    <!-- 🎨 FUENTES OPTIMIZADAS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    
+    <!-- 📱 META TAGS MÓVILES -->
+    <meta name="theme-color" content="#e0a4ce" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    
+    <!-- 🎯 STRUCTURED DATA -->
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "name": "Lume - Velas Artesanales",
+      "description": description,
+      "url": Astro.site,
+      "logo": new URL("/images/lume-logo.png", Astro.site),
+      "image": new URL(image, Astro.site),
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Pasaje Alvarez 873",
+        "addressLocality": "Corrientes",
+        "addressRegion": "Corrientes",
+        "addressCountry": "AR"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": -27.4698,
+        "longitude": -58.8304
+      },
+      "telephone": "+5493795330156",
+      "priceRange": "$$",
+      "openingHours": "Mo-Fr 09:00-18:00, Sa 09:00-13:00"
+    })} />
+    
+    <!-- 🎨 CSS CRÍTICO -->
+    <link rel="stylesheet" href="/global.css?v=2.1.0-2025-09-03T22-17-43-2025-09-03T22-16-50-2025-09-03T22-13-49">
+    
+    <!-- 📊 ANALYTICS (opcional) -->
+    <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script> -->
+  </head>
+  <body>
+    <!-- 🚀 SKELETON LOADING -->
+    <div id="skeleton-loader" style="display: none;">
+      <div class="skeleton-navbar"></div>
+      <div class="skeleton-content"></div>
+    </div>
+    
+    <Navbar />
+
+    <main>
+      <slot />
+    </main>
+
+    <Footer />
+    
+    <!-- 🔄 SERVICE WORKER -->
+    <script is:inline>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              console.log('✅ SW registrado:', registration.scope);
+            })
+            .catch(error => {
+              console.log('❌ SW falló:', error);
+            });
+        });
+      }
+    </script>
+    
+    <!-- 📱 PWA INSTALL PROMPT -->
+    <script is:inline>
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        // Mostrar botón de instalación
+      });
+    </script>
+    
+    <!-- 🛒 SCRIPT DEL CARRITO -->
+    <script src="/js/cart.js?v=2.1.0-2025-09-03T22-17-43-2025-09-03T22-16-50-2025-09-03T22-13-49" is:inline></script>
+    
+    <!-- 🔄 SCRIPT DE ACTUALIZACIÓN FORZADA -->
+    <script src="/js/force-update.js?v=2.1.0-2025-09-03T22-17-43-2025-09-03T22-16-50-2025-09-03T22-13-49" is:inline></script>
+    
+    <!-- 📦 SCRIPT DE CARGA DINÁMICA DE PRODUCTOS -->
+    <script src="/js/products-loader.js" is:inline></script>
+    
+    <!-- 📦 SCRIPT DE DETALLE DE PRODUCTO -->
+    <script src="/js/product-detail.js" is:inline></script>
+    
+    <!-- 🖼️ SCRIPT DE CARGA DINÁMICA DE GALERÍA -->
+    <script src="/js/galeria-loader.js" is:inline></script>
+  </body>
+</html>
+
