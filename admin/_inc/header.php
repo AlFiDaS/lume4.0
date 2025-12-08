@@ -154,7 +154,8 @@ $currentUser = getCurrentUser();
             color: #333;
         }
         
-        .filters-form .form-group select {
+        .filters-form .form-group select,
+        .filters-form .form-group input[type="text"] {
             width: 100%;
             padding: 0.5rem;
             border: 1px solid #ddd;
@@ -163,6 +164,12 @@ $currentUser = getCurrentUser();
             background: white;
             height: 2.5rem;
             box-sizing: border-box;
+        }
+        
+        .filters-form .form-group input[type="text"]:focus {
+            outline: none;
+            border-color: #e0a4ce;
+            box-shadow: 0 0 0 2px rgba(224, 164, 206, 0.2);
         }
         
         .filters-actions {
@@ -314,7 +321,7 @@ $currentUser = getCurrentUser();
         
         table th,
         table td {
-            padding: 1rem;
+            padding: 0.5rem;
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
@@ -491,11 +498,11 @@ $currentUser = getCurrentUser();
             tbody tr {
                 display: grid;
                 grid-template-columns: 70px 1fr;
-                grid-template-rows: auto auto auto auto;
-                gap: 0.5rem 0.75rem;
+                grid-template-rows: auto auto auto auto auto;
+                gap: 0.25rem 0.5rem;
                 border: 1px solid #e0e0e0;
                 margin-bottom: 0.75rem;
-                padding: 0.75rem;
+                padding: 0.5rem;
                 background: white;
                 border-radius: 10px;
                 box-shadow: 0 2px 6px rgba(0,0,0,0.05);
@@ -513,7 +520,7 @@ $currentUser = getCurrentUser();
             
             /* Fila 1: Imagen (izquierda) / Categoría (derecha) */
             tbody td[data-label="Imagen"] {
-                grid-row: 1 / 4;
+                grid-row: 1 / 5;
                 grid-column: 1;
                 align-self: start;
             }
@@ -534,7 +541,7 @@ $currentUser = getCurrentUser();
                 justify-self: end;
             }
             
-            /* Fila 2: Nombre (izquierda) / Precio (derecha) */
+            /* Fila 2: Nombre */
             tbody td[data-label="Nombre"] {
                 grid-row: 2;
                 grid-column: 2;
@@ -545,21 +552,28 @@ $currentUser = getCurrentUser();
                 font-weight: 700;
                 color: #333;
                 display: block;
-                line-height: 1.3;
+                line-height: 1.2;
+                margin-bottom: 0;
             }
             
             tbody td[data-label="Nombre"] small {
                 display: none;
             }
             
+            tbody td[data-label="Nombre"] br.desktop-only {
+                display: none;
+            }
+            
+            /* Fila 3: Precio (debajo del nombre) */
             tbody td[data-label="Precio"] {
-                grid-row: 2;
+                grid-row: 3;
                 grid-column: 2;
-                justify-self: end;
+                justify-self: start;
                 align-self: start;
                 font-size: 1.1rem;
                 font-weight: 700;
                 color: #e0a4ce;
+                margin-top: 0;
             }
             
             /* Ocultar campos individuales en mobile */
@@ -570,11 +584,11 @@ $currentUser = getCurrentUser();
             /* Mostrar y posicionar td combinado en mobile */
             tbody td.mobile-info {
                 display: block !important;
-                grid-row: 3;
+                grid-row: 4;
                 grid-column: 2;
                 white-space: nowrap;
                 overflow: hidden;
-                margin-top: 0;
+                margin-top: 0.25rem;
                 padding-top: 0;
             }
             
@@ -589,11 +603,11 @@ $currentUser = getCurrentUser();
                 white-space: nowrap;
             }
             
-            /* Fila 4: Editar / Eliminar */
+            /* Fila 5: Editar / Eliminar */
             tbody td[data-label="Acciones"] {
-                grid-row: 4;
+                grid-row: 5;
                 grid-column: 1 / 3;
-                margin-top: 0.25rem;
+                margin-top: 0.5rem;
                 padding-top: 0.5rem;
                 border-top: 1px solid #f0f0f0;
             }
@@ -685,7 +699,8 @@ $currentUser = getCurrentUser();
                 font-weight: 600;
             }
             
-            .filters-form .form-group select {
+            .filters-form .form-group select,
+            .filters-form .form-group input[type="text"] {
                 width: 100%;
                 padding: 0.4rem 0.5rem;
                 font-size: 0.85rem;
@@ -694,6 +709,22 @@ $currentUser = getCurrentUser();
                 background: white;
                 height: 2.2rem;
                 box-sizing: border-box;
+            }
+            
+            .filters-form .form-group input[type="text"]:focus {
+                outline: none;
+                border-color: #e0a4ce;
+                box-shadow: 0 0 0 2px rgba(224, 164, 206, 0.2);
+            }
+            
+            /* Campo de búsqueda ocupa toda la primera fila en mobile */
+            .filters-form .form-group.search-group {
+                grid-column: 1 / -1;
+            }
+            
+            /* Segunda fila: Categoría, Visible, Stock */
+            .filters-form .form-group:not(.search-group) {
+                grid-column: span 1;
             }
             
             .filters-actions {
@@ -726,7 +757,8 @@ $currentUser = getCurrentUser();
                     margin-bottom: 0.2rem;
                 }
                 
-                .filters-form .form-group select {
+                .filters-form .form-group select,
+                .filters-form .form-group input[type="text"] {
                     padding: 0.35rem 0.4rem;
                     font-size: 0.8rem;
                 }
