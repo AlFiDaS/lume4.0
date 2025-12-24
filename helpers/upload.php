@@ -95,9 +95,32 @@ function uploadProductImage($file, $slug, $categoria, $filename = 'main') {
     
     // Crear estructura de directorios: images/categoria/slug/
     $uploadDir = IMAGES_PATH . '/' . $categoria . '/' . $slug;
+    
+    // Verificar que el directorio base de imágenes existe
+    if (!is_dir(IMAGES_PATH)) {
+        // Intentar crear el directorio base si no existe
+        if (!mkdir(IMAGES_PATH, 0755, true)) {
+            return ['success' => false, 'path' => null, 'error' => 'No se pudo crear el directorio base de imágenes: ' . IMAGES_PATH];
+        }
+    }
+    
+    // Verificar que el directorio de categoría existe
+    $categoriaDir = IMAGES_PATH . '/' . $categoria;
+    if (!is_dir($categoriaDir)) {
+        if (!mkdir($categoriaDir, 0755, true)) {
+            return ['success' => false, 'path' => null, 'error' => 'No se pudo crear el directorio de categoría: ' . $categoriaDir];
+        }
+    }
+    
+    // Crear directorio del producto si no existe
     if (!is_dir($uploadDir)) {
         if (!mkdir($uploadDir, 0755, true)) {
-            return ['success' => false, 'path' => null, 'error' => 'No se pudo crear el directorio de destino'];
+            $lastError = error_get_last();
+            $errorMsg = 'No se pudo crear el directorio de destino: ' . $uploadDir;
+            if ($lastError) {
+                $errorMsg .= ' - Error: ' . $lastError['message'];
+            }
+            return ['success' => false, 'path' => null, 'error' => $errorMsg];
         }
     }
     

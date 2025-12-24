@@ -10,6 +10,41 @@
     # Redirigir a HTTPS (opcional, descomenta si usas SSL)
     # RewriteCond %{HTTPS} off
     # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+    
+    # PRIORIDAD 1: Mapear /images/ a /public/images/ (DEBE IR PRIMERO)
+    # Las imágenes se guardan en public/images/ pero se sirven desde /images/
+    # Esta regla debe ejecutarse ANTES de las demás para que funcione correctamente
+    RewriteCond %{REQUEST_URI} ^/images/
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^images/(.*)$ public/images/$1 [L]
+    
+    # PRIORIDAD 2: Archivos y directorios existentes (no hacer nada)
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^ - [L]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+    
+    # PRIORIDAD 3: Rutas de API y Admin (dejar que PHP las maneje)
+    RewriteCond %{REQUEST_URI} ^/(api|admin)/
+    RewriteRule ^ - [L]
+    
+    # PRIORIDAD 4: Archivos estáticos (js, css, etc.) - excluir /images/ porque ya se manejó arriba
+    RewriteCond %{REQUEST_URI} \.(css|js|woff|woff2|ttf|eot)$ [NC]
+    RewriteRule ^ - [L]
+    
+    # PRIORIDAD 5: Redirigir rutas dinámicas de productos a placeholder/index.html
+    # Esto permite que las páginas dinámicas funcionen en modo estático
+    # Ejemplo: /navidad/luky -> /navidad/placeholder/index.html (JavaScript extrae el slug real)
+    # Nota: Astro genera /productos/placeholder/index.html, no /productos/placeholder.html
+    RewriteCond %{REQUEST_URI} ^/(productos|souvenirs|navidad)/([^/]+)/?$
+    RewriteCond %{REQUEST_URI} !^/(productos|souvenirs|navidad)/placeholder(/|$)
+    RewriteRule ^(productos|souvenirs|navidad)/([^/]+)/?$ $1/placeholder/ [L]
+    
+    # PRIORIDAD 6: Si la URL no es un archivo o directorio existente, servir index.html de la raíz
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} !^/(api|admin)/
+    RewriteRule ^(.*)$ index.html [L]
 </IfModule>
 
 # Proteger archivos sensibles

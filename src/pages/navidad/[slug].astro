@@ -2,10 +2,19 @@
 import Layout from '../../layouts/Layout.astro';
 import InfoVelas from '../../components/InfoVelas.astro';
 
-// Desactivar prerenderizado para carga dinámica desde la API
-export const prerender = false;
+// En desarrollo: usar prerender=false para SSR (permite cualquier slug)
+// En build: generar placeholder para modo estático
+export const prerender = import.meta.env.DEV ? false : undefined;
 
-const slug = Astro.params.slug || '';
+export async function getStaticPaths() {
+  // En desarrollo: retornar [] permite SSR para cualquier slug
+  // En build: retornar placeholder genera /navidad/placeholder.html
+  if (import.meta.env.DEV) {
+    return [];
+  }
+  // En build: generar placeholder para modo estático
+  return [{ params: { slug: 'placeholder' } }];
+}
 ---
 
 <Layout>
@@ -23,7 +32,17 @@ const slug = Astro.params.slug || '';
     <InfoVelas />
   </div>
 
-  <script is:inline define:vars={{ slug }}>
+  <script is:inline>
+    // Extraer slug directamente de la URL (funciona en modo estático)
+    function getSlug() {
+      const pathname = window.location.pathname;
+      const match = pathname.match(/\/(productos|souvenirs|navidad)\/([^\/]+)/);
+      if (match && match[2]) {
+        return decodeURIComponent(match[2]);
+      }
+      return null;
+    }
+    
     (function() {
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initDetail);
@@ -32,8 +51,15 @@ const slug = Astro.params.slug || '';
       }
       
       function initDetail() {
-        if (window.initProductDetail && slug) {
-          window.initProductDetail(slug, {
+        const productSlug = getSlug();
+        
+        if (!productSlug) {
+          console.error('No se pudo obtener el slug del producto');
+          return;
+        }
+        
+        if (window.initProductDetail) {
+          window.initProductDetail(productSlug, {
             containerSelector: '#product-detail-container',
             autoLoad: true
           }).then(() => {
