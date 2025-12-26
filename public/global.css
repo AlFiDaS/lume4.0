@@ -697,6 +697,73 @@ img {
   opacity: 0.7;
 }
 
+.product-card .info .price-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin: 0;
+}
+
+.product-card .info .price-label {
+  font-size: 0.75rem;
+  color: #666;
+  margin: 0;
+  font-weight: 500;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  text-transform: lowercase;
+}
+
+.product-card .info .price-label::first-letter {
+  text-transform: uppercase;
+}
+
+.product-card .info .price-card .price-label {
+  text-transform: none;
+}
+
+.product-card .info .price-card {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0;
+  font-weight: 500;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.3;
+}
+
+.product-card .info .price-card .price-label {
+  font-size: 0.85rem;
+  color: #666;
+  margin-right: 0.25rem;
+}
+
+.product-card .info .price-card-text {
+  font-size: 0.75rem;
+  color: #999;
+  font-weight: 400;
+  display: block;
+  margin-top: 0.1rem;
+}
+
+@media (max-width: 800px) {
+  .product-card .info .price-card {
+    font-size: 0.8rem;
+  }
+  
+  .product-card .info .price-card-text {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .product-card .info .price-card {
+    font-size: 0.75rem;
+  }
+  
+  .product-card .info .price-card-text {
+    font-size: 0.65rem;
+  }
+}
+
 .product-card .btn-agregar {
   background: linear-gradient(135deg, #e0a4ce, #d89bc0);
   color: #fff;
@@ -776,6 +843,18 @@ img {
     font-size: 1.6rem;
   }
   
+  .product-card .info .price-label {
+    font-size: 0.7rem;
+  }
+  
+  .product-card .info .price-card {
+    font-size: 0.8rem;
+  }
+  
+  .product-card .info .price-card-text {
+    font-size: 0.7rem;
+  }
+  
   .product-card .btn-agregar {
     padding: var(--space-xs) var(--space-sm);
     font-size: 0.7rem;
@@ -798,6 +877,18 @@ img {
   
   .product-card .info .price {
     font-size: 1.5rem;
+  }
+  
+  .product-card .info .price-label {
+    font-size: 0.65rem;
+  }
+  
+  .product-card .info .price-card {
+    font-size: 0.75rem;
+  }
+  
+  .product-card .info .price-card-text {
+    font-size: 0.65rem;
   }
   
   .product-card .btn-agregar {
@@ -1422,6 +1513,12 @@ div.breadcrumb .current {
 .producto-price {
   margin-bottom: var(--space-md);
   display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.price-main-row {
+  display: flex;
   align-items: center;
   gap: var(--space-md);
   flex-wrap: wrap;
@@ -1447,6 +1544,36 @@ div.breadcrumb .current {
   letter-spacing: 0.5px;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   white-space: nowrap;
+}
+
+.price-card-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+}
+
+.price-card-label {
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: 500;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.price-card-value {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #666;
+  line-height: 1;
+}
+
+.price-card-note {
+  font-size: 0.75rem;
+  color: #999;
+  font-weight: 400;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .producto-details {
@@ -1637,6 +1764,18 @@ div.breadcrumb .current {
 
   .price {
     font-size: 2.5rem;
+  }
+
+  .price-card-value {
+    font-size: 1rem;
+  }
+
+  .price-card-label {
+    font-size: 0.8rem;
+  }
+
+  .price-card-note {
+    font-size: 0.75rem;
   }
 
   .price-badge {

@@ -69,6 +69,30 @@
     }
     
     /**
+     * Extraer valor numérico del precio
+     * @param {string} priceString - Precio como string (ej: "$15900")
+     * @returns {number} Valor numérico
+     */
+    function extractPriceValue(priceString) {
+        if (!priceString) return 0;
+        // Remover símbolos y espacios, mantener solo números
+        const cleaned = priceString.replace(/[^0-9]/g, '');
+        return parseInt(cleaned, 10) || 0;
+    }
+    
+    /**
+     * Calcular precio con tarjeta (25% más)
+     * @param {string} priceString - Precio como string (ej: "$15900")
+     * @returns {string} Precio con tarjeta formateado (ej: "$19875")
+     */
+    function calculateCardPrice(priceString) {
+        const basePrice = extractPriceValue(priceString);
+        if (basePrice === 0) return '';
+        const cardPrice = Math.round(basePrice * 1.25);
+        return '$' + cardPrice.toLocaleString('es-AR');
+    }
+    
+    /**
      * Renderizar producto como card
      * @param {Object} product
      * @returns {string} HTML del producto
@@ -82,6 +106,21 @@
         const hoverAttr = product.hoverImage ? 
             `onmouseover="this.src='${hoverImage}'" onmouseout="this.src='${product.image}'"` : 
             '';
+        
+        // Calcular precio de tarjeta
+        const cardPrice = calculateCardPrice(product.price);
+        const priceHtml = product.price ? `
+            <div class="price-container">
+                <p class="price-label">Efectivo / transferencia:</p>
+                <p class="price">${escapeHtml(product.price)}</p>
+                ${cardPrice ? `
+                    <p class="price-card">
+                        <span class="price-label">Tarjeta:</span> ${escapeHtml(cardPrice)}
+                        <span class="price-card-text">hasta en 3 cuotas</span>
+                    </p>
+                ` : ''}
+            </div>
+        ` : '<p class="price">N/A</p>';
         
         return `
             <div class="product-card">
@@ -103,7 +142,7 @@
                 
                 <div class="info">
                     <h3>${escapeHtml(product.name)}</h3>
-                    <p class="price">${escapeHtml(product.price || 'N/A')}</p>
+                    ${priceHtml}
                     <button 
                         class="btn-agregar" 
                         onclick="agregarAlCarrito('${escapeHtml(product.name)}', '${escapeHtml(product.price)}', '${product.image}', '${product.slug}', '${product.categoria}')"

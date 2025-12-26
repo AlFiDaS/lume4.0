@@ -42,9 +42,29 @@ const displayHover = hasValidHover ? hoverImage : displayImage;
     )}
   </div>
   
+---
+// Calcular precio de tarjeta (25% más)
+let cardPriceFormatted = null;
+const priceMatch = price.match(/\$?(\d+)/);
+if (priceMatch) {
+  const basePrice = parseInt(priceMatch[1], 10);
+  const cardPrice = Math.round(basePrice * 1.25);
+  cardPriceFormatted = '$' + cardPrice.toLocaleString('es-AR');
+}
+---
+
   <div class="info">
     <h3>{name}</h3>
-    <p class="price">{price}</p>
+    <div class="price-container">
+      <p class="price-label">Efectivo / transferencia:</p>
+      <p class="price">{price}</p>
+      {cardPriceFormatted && (
+        <p class="price-card">
+          <span class="price-label">Tarjeta:</span> {cardPriceFormatted}
+          <span class="price-card-text">hasta en 3 cuotas</span>
+        </p>
+      )}
+    </div>
     <button 
       class="btn-agregar" 
       onclick={`agregarAlCarrito('${name}', '${price}', '${displayImage}', '${slug}', '${categoria}')`}
@@ -246,6 +266,52 @@ const displayHover = hasValidHover ? hoverImage : displayImage;
     transform: translateY(-50%);
     font-size: 1rem;
     opacity: 0.7;
+  }
+
+  .price-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    margin: 0;
+  }
+
+  .price-label {
+    font-size: 0.75rem;
+    color: #666;
+    margin: 0;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    text-transform: lowercase;
+  }
+
+  .price-label::first-letter {
+    text-transform: uppercase;
+  }
+
+  .price-card .price-label {
+    text-transform: none;
+  }
+
+  .price-card {
+    font-size: 0.85rem;
+    color: #666;
+    margin: 0;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .price-card .price-label {
+    font-size: 0.85rem;
+    color: #666;
+    margin-right: 0.25rem;
+  }
+
+  .price-card-text {
+    font-size: 0.75rem;
+    color: #999;
+    font-weight: 400;
+    display: block;
+    margin-top: 0.1rem;
   }
 
   .btn-agregar {

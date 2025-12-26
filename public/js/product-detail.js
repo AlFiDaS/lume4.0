@@ -54,6 +54,30 @@
     }
     
     /**
+     * Extraer valor numérico del precio
+     * @param {string} priceString - Precio como string (ej: "$15900")
+     * @returns {number} Valor numérico
+     */
+    function extractPriceValue(priceString) {
+        if (!priceString) return 0;
+        // Remover símbolos y espacios, mantener solo números
+        const cleaned = priceString.replace(/[^0-9]/g, '');
+        return parseInt(cleaned, 10) || 0;
+    }
+    
+    /**
+     * Calcular precio con tarjeta (25% más)
+     * @param {string} priceString - Precio como string (ej: "$15900")
+     * @returns {string} Precio con tarjeta formateado (ej: "$19875")
+     */
+    function calculateCardPrice(priceString) {
+        const basePrice = extractPriceValue(priceString);
+        if (basePrice === 0) return '';
+        const cardPrice = Math.round(basePrice * 1.25);
+        return '$' + cardPrice.toLocaleString('es-AR');
+    }
+    
+    /**
      * Renderizar detalle de producto
      * @param {Object} product
      * @param {HTMLElement} container
@@ -130,8 +154,16 @@
                 ` : ''}
                 
                 <div class="producto-price">
-                    <span class="price">${escapeHtml(product.price || 'N/A')}</span>
-                    <div class="price-badge">Transferencia / efectivo</div>
+                    <div class="price-main-row">
+                        <span class="price">${escapeHtml(product.price || 'N/A')}</span>
+                        <div class="price-badge">Transferencia / efectivo</div>
+                    </div>
+                    ${calculateCardPrice(product.price) ? `
+                        <div class="price-card-row">
+                            <span class="price-card-label">Precio tarjeta:</span>
+                            <span class="price-card-value">${escapeHtml(calculateCardPrice(product.price))}</span>
+                        </div>
+                    ` : ''}
                 </div>
                 
                 <div class="producto-details">
@@ -143,7 +175,7 @@
                     ` : ''}
                     <div class="detail-item">
                         <span class="detail-icon">💳</span>
-                        <span class="detail-text">Tarjeta de crédito: 25% recargo • 3 cuotas</span>
+                        <span class="detail-text">Tarjeta de crédito: Hasta 3 cuotas sin interés</span>
                     </div>
                 </div>
                 
