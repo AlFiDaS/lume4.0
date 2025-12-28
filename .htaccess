@@ -83,7 +83,7 @@
     AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
 </IfModule>
 
-# Cache para archivos estáticos
+# Cache para archivos estáticos (pero NO para archivos con query string v=)
 <IfModule mod_expires.c>
     ExpiresActive On
     ExpiresByType image/jpeg "access plus 1 year"
@@ -92,5 +92,15 @@
     ExpiresByType image/gif "access plus 1 year"
     ExpiresByType text/css "access plus 1 month"
     ExpiresByType application/javascript "access plus 1 month"
+</IfModule>
+
+# NO cachear archivos CSS/JS con query string v= (nuevas versiones)
+<IfModule mod_headers.c>
+    # Archivos con ?v= no deben cachearse
+    RewriteCond %{QUERY_STRING} v=
+    RewriteRule \.(css|js)$ - [E=NO_CACHE:1]
+    Header set Cache-Control "no-cache, no-store, must-revalidate" env=NO_CACHE
+    Header set Pragma "no-cache" env=NO_CACHE
+    Header set Expires "0" env=NO_CACHE
 </IfModule>
 

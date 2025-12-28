@@ -54,11 +54,26 @@
   box-sizing: border-box;
 }
 
-html, body {
+html {
+  font-size: 16px; /* Base más pequeña para mobile */
+  -webkit-text-size-adjust: 100%; /* Prevenir auto-zoom en iOS */
+  -moz-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Escalar font-size en pantallas más grandes */
+@media (min-width: 768px) {
+  html {
+    font-size: 18px;
+  }
+}
+
+body {
   font-family: 'Open Sans', 'Segoe UI', 'Helvetica Neue', sans-serif;
   background-color: var(--surface-light);
   color: var(--text-primary);
-  font-size: 18px;
+  font-size: 1rem; /* Usar rem en lugar de px fijo */
   line-height: 1.7;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

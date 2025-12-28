@@ -41,15 +41,24 @@ self.addEventListener('activate', (event) => {
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
-          if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
+          // Eliminar TODOS los caches que no coincidan con los nombres actuales
+          if (!cacheName.startsWith('lume-2.1.0-') || 
+              (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE && cacheName !== CACHE_NAME)) {
             console.log('🗑️ Eliminando cache obsoleto:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
     }).then(() => {
-      console.log('🚀 Service Worker activado');
-      return self.clients.claim();
+      console.log('🚀 Service Worker activado, caches limpiados');
+      // Limpiar todo el contenido del DYNAMIC_CACHE para forzar actualización
+      return caches.open(DYNAMIC_CACHE).then(cache => {
+        return cache.keys().then(keys => {
+          return Promise.all(keys.map(key => cache.delete(key)));
+        });
+      }).then(() => {
+        return self.clients.claim();
+      });
     })
   );
 });
@@ -81,17 +90,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 📄 PÁGINAS: Network First con fallback a cache
+  // 📄 PÁGINAS: Network First con fallback a cache (sin cachear para evitar problemas)
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
+      fetch(request, { cache: 'no-store' })
         .then(response => {
-          if (response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(DYNAMIC_CACHE).then(cache => {
-              cache.put(request, responseClone);
-            });
-          }
           return response;
         })
         .catch(() => {
@@ -101,15 +104,26 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 🎨 CSS/JS: Cache First
+  // 🎨 CSS/JS: Network First (NUNCA cachear archivos con ?v=)
   if (request.destination === 'style' || request.destination === 'script') {
+    // Si tiene query string v=, NUNCA usar cache
+    if (url.search.includes('v=')) {
+      event.respondWith(
+        fetch(request, { cache: 'no-store' }).catch(() => {
+          // Si falla la red, no usar cache, devolver error
+          return new Response('Network error', { status: 408 });
+        })
+      );
+      return;
+    }
+    
+    // Sin query string, usar Network First pero sin cachear
     event.respondWith(
-      caches.match(request)
-        .then(response => {
-          if (response) {
-            return response;
-          }
-          return fetch(request);
+      fetch(request, { cache: 'no-store' })
+        .then(response => response)
+        .catch(() => {
+          // Fallback a cache solo si falla la red (para archivos sin versión)
+          return caches.match(request);
         })
     );
     return;
@@ -154,13 +168,4 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// 🚀 OFFLINE SUPPORT
-self.addEventListener('fetch', (event) => {
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request).catch(() => {
-        return caches.match('/offline.html');
-      })
-    );
-  }
-});
+// Nota: El manejo de navigate ya está arriba, no duplicar

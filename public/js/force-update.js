@@ -1,170 +1,129 @@
-// 🔄 SCRIPT DE ACTUALIZACIÓN FORZADA - Lume 2.1.0
+// 🔄 FORZAR ACTUALIZACIÓN - Versión agresiva para limpiar cache
+const CURRENT_VERSION = '2.1.0-2025-09-03T22-17-43-2025-09-03T22-16-50-2025-09-03T22-13-49';
+
 (function() {
   'use strict';
   
-  const CURRENT_VERSION = '2.1.0-2025-09-03T22-13-49';
-  const VERSION_KEY = 'lume_version';
-  const LAST_UPDATE_KEY = 'lume_last_update';
+  // Prevenir múltiples ejecuciones
+  if (window.__FORCE_UPDATE_LOADED) {
+    return;
+  }
+  window.__FORCE_UPDATE_LOADED = true;
   
-  // 🔍 VERIFICAR SI HAY UNA NUEVA VERSIÓN
-  function checkForUpdates() {
-    const storedVersion = localStorage.getItem(VERSION_KEY);
-    const lastUpdate = localStorage.getItem(LAST_UPDATE_KEY);
-    
-    if (storedVersion !== CURRENT_VERSION) {
-      console.log('🔄 Nueva versión detectada:', CURRENT_VERSION);
-      forceUpdate();
-      return;
-    }
-    
-    // Verificar si han pasado más de 24 horas desde la última actualización
-    if (lastUpdate) {
-      const lastUpdateTime = new Date(lastUpdate).getTime();
-      const now = new Date().getTime();
-      const hoursSinceUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
-      
-      if (hoursSinceUpdate > 24) {
-        console.log('🔄 Han pasado más de 24 horas, verificando actualizaciones...');
-        checkServiceWorker();
-      }
-    }
+  console.log('🔄 Force Update iniciado, versión:', CURRENT_VERSION);
+  
+  const VERSION_KEY = 'lume_cache_version';
+  const RELOAD_FLAG = 'lume_reload_in_progress';
+  const storedVersion = localStorage.getItem(VERSION_KEY);
+  const isReloading = sessionStorage.getItem(RELOAD_FLAG);
+  
+  // Si ya estamos en proceso de recarga, no hacer nada más
+  if (isReloading) {
+    console.log('⏸️ Recarga en progreso, esperando...');
+    // Limpiar el flag después de un momento
+    setTimeout(() => {
+      sessionStorage.removeItem(RELOAD_FLAG);
+    }, 2000);
+    return;
   }
   
-  // 🚀 FORZAR ACTUALIZACIÓN
-  function forceUpdate() {
-    // Limpiar caché local
+  // Función para limpiar TODOS los caches
+  function clearAllCaches() {
     if ('caches' in window) {
-      caches.keys().then(cacheNames => {
-        cacheNames.forEach(cacheName => {
-          if (cacheName.includes('lume')) {
-            caches.delete(cacheName);
-            console.log('🗑️ Cache eliminado:', cacheName);
-          }
-        });
+      return caches.keys().then(cacheNames => {
+        console.log('🗑️ Eliminando', cacheNames.length, 'caches:', cacheNames);
+        return Promise.all(cacheNames.map(name => {
+          console.log('🗑️ Eliminando cache:', name);
+          return caches.delete(name);
+        }));
+      }).then(() => {
+        console.log('✅ Todos los caches eliminados');
       });
     }
-    
-    // Limpiar localStorage
-    const keysToKeep = ['cart_items', 'cart_count'];
-    const keysToRemove = [];
-    
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && !keysToKeep.includes(key)) {
-        keysToRemove.push(key);
-      }
+    return Promise.resolve();
+  }
+  
+  // Función para desregistrar TODOS los Service Workers
+  function unregisterAllSWs() {
+    if ('serviceWorker' in navigator) {
+      return navigator.serviceWorker.getRegistrations().then(registrations => {
+        console.log('🗑️ Desregistrando', registrations.length, 'Service Workers');
+        return Promise.all(registrations.map(reg => {
+          console.log('🗑️ Desregistrando SW:', reg.scope);
+          return reg.unregister();
+        }));
+      }).then(() => {
+        console.log('✅ Todos los Service Workers desregistrados');
+      });
     }
-    
-    keysToRemove.forEach(key => {
-      localStorage.removeItem(key);
+    return Promise.resolve();
+  }
+  
+  // Si la versión cambió O si no hay versión guardada, limpiar TODO
+  if (!storedVersion || storedVersion !== CURRENT_VERSION) {
+    console.log('🔄 NUEVA VERSIÓN DETECTADA - Limpiando TODO...', {
+      stored: storedVersion,
+      current: CURRENT_VERSION
     });
     
-    // Actualizar versión
-    localStorage.setItem(VERSION_KEY, CURRENT_VERSION);
-    localStorage.setItem(LAST_UPDATE_KEY, new Date().toISOString());
+    // Marcar que estamos recargando
+    sessionStorage.setItem(RELOAD_FLAG, '1');
     
-    // Mostrar notificación
-    showUpdateNotification();
+    // Limpiar todo
+    Promise.all([
+      clearAllCaches(),
+      unregisterAllSWs()
+    ]).then(() => {
+      console.log('✅ Limpieza completa');
+      
+      // Actualizar versión
+      localStorage.setItem(VERSION_KEY, CURRENT_VERSION);
+      
+      // Recargar página forzando sin cache
+      console.log('🔄 Recargando página sin cache...');
+      setTimeout(() => {
+        // Usar location.href con timestamp para evitar cache
+        const url = new URL(window.location.href);
+        url.searchParams.set('nocache', Date.now());
+        window.location.href = url.toString();
+      }, 300);
+    }).catch(err => {
+      console.error('❌ Error al limpiar:', err);
+      // Aun así, actualizar versión y recargar
+      localStorage.setItem(VERSION_KEY, CURRENT_VERSION);
+      setTimeout(() => {
+        const url = new URL(window.location.href);
+        url.searchParams.set('nocache', Date.now());
+        window.location.href = url.toString();
+      }, 300);
+    });
     
-    // Recargar página después de 2 segundos
-    setTimeout(() => {
-      window.location.reload(true);
-    }, 2000);
+    return; // Salir
   }
   
-  // 🔍 VERIFICAR SERVICE WORKER
-  function checkServiceWorker() {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(registrations => {
-        registrations.forEach(registration => {
-          registration.update();
-          console.log('🔄 Service Worker actualizado');
-        });
-      });
+  // Si hay flag de recarga, limpiarlo
+  if (isReloading) {
+    sessionStorage.removeItem(RELOAD_FLAG);
+  }
+  
+  // Verificar actualización del SW periódicamente (sin recargar)
+  if ('serviceWorker' in navigator) {
+    function checkSW() {
+      navigator.serviceWorker.getRegistration().then(reg => {
+        if (reg) {
+          reg.update().catch(() => {});
+        }
+      }).catch(() => {});
     }
     
-    localStorage.setItem(LAST_UPDATE_KEY, new Date().toISOString());
-  }
-  
-  // 📢 MOSTRAR NOTIFICACIÓN DE ACTUALIZACIÓN
-  function showUpdateNotification() {
-    const notification = document.createElement('div');
-    notification.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: linear-gradient(135deg, #e0a4ce, #f7d4ed);
-      color: white;
-      padding: 1rem 1.5rem;
-      border-radius: 10px;
-      box-shadow: 0 4px 20px rgba(224, 164, 206, 0.3);
-      z-index: 10000;
-      font-family: 'Inter', sans-serif;
-      font-weight: 600;
-      max-width: 300px;
-      animation: slideIn 0.5s ease-out;
-    `;
+    // Verificar cada 5 minutos
+    setInterval(checkSW, 5 * 60 * 1000);
     
-    notification.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 0.5rem;">
-        <span style="font-size: 1.2rem;">🔄</span>
-        <div>
-          <div style="font-weight: 700; margin-bottom: 0.25rem;">¡Nueva versión disponible!</div>
-          <div style="font-size: 0.9rem; opacity: 0.9;">Actualizando automáticamente...</div>
-        </div>
-      </div>
-    `;
-    
-    // Agregar estilos de animación
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes slideIn {
-        from {
-          transform: translateX(100%);
-          opacity: 0;
-        }
-        to {
-          transform: translateX(0);
-          opacity: 1;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    document.body.appendChild(notification);
-    
-    // Remover notificación después de 5 segundos
-    setTimeout(() => {
-      if (notification.parentNode) {
-        notification.parentNode.removeChild(notification);
-      }
-    }, 5000);
-  }
-  
-  // 🚀 INICIALIZAR VERIFICACIÓN
-  function init() {
-    // Verificar al cargar la página
-    checkForUpdates();
-    
-    // Verificar cada hora
-    setInterval(checkForUpdates, 60 * 60 * 1000);
-    
-    // Verificar cuando la página vuelve a estar visible
+    // Verificar cuando vuelve a primer plano
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) {
-        checkForUpdates();
+        setTimeout(checkSW, 1000);
       }
     });
-    
-    // Verificar cuando se recupera conexión
-    window.addEventListener('online', checkForUpdates);
   }
-  
-  // 🎯 EJECUTAR CUANDO EL DOM ESTÉ LISTO
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-  
 })();
