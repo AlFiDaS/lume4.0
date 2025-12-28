@@ -6,6 +6,7 @@ $pageTitle = 'Editar Producto';
 require_once '../config.php';
 require_once '../helpers/upload.php';
 require_once '../helpers/slugify.php';
+require_once '../helpers/categories.php';
 
 // Necesitamos autenticación pero sin incluir el header todavía
 if (!defined('LUME_ADMIN')) {
@@ -58,9 +59,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Validaciones
         if (empty($formData['name'])) {
             $error = 'El nombre del producto es requerido';
-        } elseif (!in_array($formData['categoria'], ['productos', 'souvenirs', 'navidad'])) {
-            $error = 'Categoría inválida';
         } else {
+            // Validar que la categoría exista
+            $categoriaObj = getCategoryBySlug($formData['categoria']);
+            if (!$categoriaObj) {
+                $error = 'Categoría inválida';
+            }
+        }
+        
+        if (empty($error)) {
             // Generar slug si está vacío
             if (empty($formData['slug'])) {
                 $formData['slug'] = generateUniqueSlug($formData['name'], $productId);
@@ -292,10 +299,22 @@ $csrfToken = generateCSRFToken();
         <div class="form-group">
             <label for="categoria">Categoría *</label>
             <select id="categoria" name="categoria" required>
-                <option value="productos" <?= ($formData['categoria'] ?? 'productos') === 'productos' ? 'selected' : '' ?>>Productos</option>
-                <option value="souvenirs" <?= ($formData['categoria'] ?? '') === 'souvenirs' ? 'selected' : '' ?>>Souvenirs</option>
-                <option value="navidad" <?= ($formData['categoria'] ?? '') === 'navidad' ? 'selected' : '' ?>>Navidad</option>
+                <?php 
+                // Obtener todas las categorías (incluidas las ocultas, para poder editar productos)
+                $categorias = getAllCategories(false);
+                $selectedCategoria = $formData['categoria'] ?? 'productos';
+                foreach ($categorias as $cat): 
+                ?>
+                    <option value="<?= htmlspecialchars($cat['slug']) ?>" 
+                            <?= $selectedCategoria === $cat['slug'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($cat['name']) ?>
+                        <?= !$cat['visible'] ? ' (Oculta)' : '' ?>
+                    </option>
+                <?php endforeach; ?>
             </select>
+            <small>
+                Las categorías ocultas están disponibles aquí para poder editar productos.
+            </small>
         </div>
         
         <div class="form-group">

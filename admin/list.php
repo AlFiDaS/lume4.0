@@ -4,6 +4,7 @@
  */
 $pageTitle = 'Lista de Productos';
 require_once '../config.php';
+require_once '../helpers/categories.php';
 require_once '_inc/header.php';
 
 // Filtros
@@ -92,9 +93,15 @@ if (!empty($buscar)) {
                 <label>Categoría</label>
                 <select name="categoria">
                     <option value="">Todas</option>
-                    <option value="productos" <?= $categoria === 'productos' ? 'selected' : '' ?>>Productos</option>
-                    <option value="souvenirs" <?= $categoria === 'souvenirs' ? 'selected' : '' ?>>Souvenirs</option>
-                    <option value="navidad" <?= $categoria === 'navidad' ? 'selected' : '' ?>>Navidad</option>
+                    <?php 
+                    $categorias = getAllCategories(false);
+                    foreach ($categorias as $cat): 
+                    ?>
+                        <option value="<?= htmlspecialchars($cat['slug']) ?>" 
+                                <?= $categoria === $cat['slug'] ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($cat['name']) ?>
+                        </option>
+                    <?php endforeach; ?>
                 </select>
             </div>
             

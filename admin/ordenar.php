@@ -4,14 +4,22 @@
  */
 $pageTitle = 'Ordenar Productos';
 require_once '../config.php';
+require_once '../helpers/categories.php';
 require_once '_inc/header.php';
 
 // Obtener categoría del filtro
 $categoriaFiltro = $_GET['categoria'] ?? 'productos';
 
-// Validar categoría
-if (!in_array($categoriaFiltro, ['productos', 'souvenirs', 'navidad'])) {
-    $categoriaFiltro = 'productos';
+// Validar categoría - debe existir en la base de datos
+$categoriaObj = getCategoryBySlug($categoriaFiltro);
+if (!$categoriaObj) {
+    // Si no existe, usar la primera categoría disponible
+    $categorias = getAllCategories(true);
+    if (!empty($categorias)) {
+        $categoriaFiltro = $categorias[0]['slug'];
+    } else {
+        $categoriaFiltro = 'productos'; // Fallback
+    }
 }
 
 // Verificar si la columna orden existe
@@ -74,18 +82,16 @@ foreach ($products as $index => $product) {
     <!-- Filtros por categoría - Pestañas tipo navegador -->
     <div class="tabs-container">
         <div class="tabs-wrapper">
-            <a href="?categoria=productos" 
-               class="tab <?= $categoriaFiltro === 'productos' ? 'active' : '' ?>">
-                PRODUCTOS
-            </a>
-            <a href="?categoria=souvenirs" 
-               class="tab <?= $categoriaFiltro === 'souvenirs' ? 'active' : '' ?>">
-                SOUVENIRS
-            </a>
-            <a href="?categoria=navidad" 
-               class="tab <?= $categoriaFiltro === 'navidad' ? 'active' : '' ?>">
-                NAVIDAD
-            </a>
+            <?php 
+            // Mostrar TODAS las categorías para ordenar (incluso ocultas, para poder ordenar productos)
+            $categorias = getAllCategories(false);
+            foreach ($categorias as $cat): 
+            ?>
+                <a href="?categoria=<?= htmlspecialchars($cat['slug']) ?>" 
+                   class="tab <?= $categoriaFiltro === $cat['slug'] ? 'active' : '' ?>">
+                    <?= strtoupper(htmlspecialchars($cat['name'])) ?>
+                </a>
+            <?php endforeach; ?>
         </div>
         <div class="tabs-content">
             <p style="margin: 0; color: #666; font-size: 0.9rem; padding: 1rem 0;">

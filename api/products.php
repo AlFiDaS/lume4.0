@@ -39,6 +39,7 @@ ini_set('display_errors', 0);
 // Cargar helpers
 require_once '../helpers/cache-bust.php';
 require_once '../helpers/auth.php'; // Para función sanitize()
+require_once '../helpers/categories.php';
 
 try {
     // Construir consulta con filtros
@@ -51,7 +52,9 @@ try {
     // Filtro por categoría
     if (!empty($_GET['categoria'])) {
         $categoria = sanitize($_GET['categoria']);
-        if (in_array($categoria, ['productos', 'souvenirs', 'navidad'])) {
+        // Validar que la categoría exista (solo visibles para la API pública)
+        $categoriaObj = getCategoryBySlug($categoria);
+        if ($categoriaObj && $categoriaObj['visible']) {
             $sql .= " AND categoria = :categoria";
             $params['categoria'] = $categoria;
         }

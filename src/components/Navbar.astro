@@ -1,9 +1,10 @@
 ---
-const links = [
+// Links estáticos que siempre aparecen (en orden)
+const staticLinksBefore = [
   { href: '/', text: 'Inicio' },
-  { href: '/productos', text: 'Productos' },
-  { href: '/navidad', text: 'Navidad' },
-  { href: '/souvenirs', text: 'Souvenirs' },
+];
+
+const staticLinksAfter = [
   { href: '/ideas', text: 'Galeria de Ideas' },
 ];
 ---
@@ -21,8 +22,12 @@ const links = [
 
     <!-- Derecha: solo en desktop (links + carrito) -->
     <div class="nav-desktop-right">
-      <ul class="nav-links desktop">
-        {links.map((link) => (
+      <ul class="nav-links desktop" id="nav-links-desktop">
+        {staticLinksBefore.map((link) => (
+          <li><a href={link.href}>{link.text}</a></li>
+        ))}
+        <!-- Las categorías se cargarán dinámicamente aquí -->
+        {staticLinksAfter.map((link) => (
           <li><a href={link.href}>{link.text}</a></li>
         ))}
       </ul>
@@ -40,38 +45,163 @@ const links = [
 
   <!-- Menú desplegable en mobile -->
   <ul id="nav-links" class="nav-links mobile">
-    {links.map((link) => (
+    {staticLinksBefore.map((link) => (
+      <li><a href={link.href}>{link.text}</a></li>
+    ))}
+    <!-- Las categorías se cargarán dinámicamente aquí -->
+    {staticLinksAfter.map((link) => (
       <li><a href={link.href}>{link.text}</a></li>
     ))}
   </ul>
 </nav>
 
 <script is:inline>
-  // Esperar a que cart.js esté cargado
-  document.addEventListener('DOMContentLoaded', function() {
-    // Actualizar contador del carrito
-    if (typeof window.updateCartCount === 'function') {
-      window.updateCartCount();
-    }
-
-    const toggle = document.getElementById('menu-toggle');
-    const navLinks = document.getElementById('nav-links');
-
-    if (toggle && navLinks) {
-      toggle.addEventListener('click', (e) => {
-        e.stopPropagation();
-        navLinks.classList.toggle('open');
-      });
-
-      document.addEventListener('click', (e) => {
-        if (navLinks.classList.contains('open') && !navLinks.contains(e.target) && e.target.id !== 'menu-toggle') {
-          navLinks.classList.remove('open');
+  // Cargar categorías dinámicamente
+  (function() {
+    async function loadCategories() {
+      try {
+        const response = await fetch('/api/categories.php');
+        const data = await response.json();
+        
+        if (data.success && data.categories) {
+          // Crear links de categorías
+          const categoryLinks = data.categories.map(cat => ({
+            href: `/${cat.slug}`,
+            text: cat.name
+          }));
+          
+          // Insertar categorías en el menú desktop (después de "Inicio", antes de "Galería de Ideas")
+          const desktopLinks = document.getElementById('nav-links-desktop');
+          if (desktopLinks) {
+            // Encontrar todos los links estáticos
+            const allLinks = Array.from(desktopLinks.querySelectorAll('li'));
+            // El segundo link (índice 1) es "Galería de Ideas"
+            if (allLinks.length >= 2) {
+              const galeriaLink = allLinks[1];
+              // Insertar categorías antes de "Galería de Ideas" (en orden normal, no reverse)
+              categoryLinks.forEach(link => {
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                a.href = link.href;
+                a.textContent = link.text;
+                li.appendChild(a);
+                desktopLinks.insertBefore(li, galeriaLink);
+              });
+            } else {
+              // Fallback: agregar después del primer link
+              const firstLink = allLinks[0];
+              if (firstLink && firstLink.nextSibling) {
+                categoryLinks.forEach(link => {
+                  const li = document.createElement('li');
+                  const a = document.createElement('a');
+                  a.href = link.href;
+                  a.textContent = link.text;
+                  li.appendChild(a);
+                  desktopLinks.insertBefore(li, firstLink.nextSibling);
+                });
+              } else {
+                categoryLinks.forEach(link => {
+                  const li = document.createElement('li');
+                  const a = document.createElement('a');
+                  a.href = link.href;
+                  a.textContent = link.text;
+                  li.appendChild(a);
+                  desktopLinks.appendChild(li);
+                });
+              }
+            }
+          }
+          
+          // Insertar categorías en el menú mobile (después de "Inicio", antes de "Galería de Ideas")
+          const mobileLinks = document.getElementById('nav-links');
+          if (mobileLinks) {
+            // Encontrar todos los links estáticos
+            const allMobileLinks = Array.from(mobileLinks.querySelectorAll('li'));
+            // El segundo link (índice 1) es "Galería de Ideas"
+            if (allMobileLinks.length >= 2) {
+              const galeriaMobileLink = allMobileLinks[1];
+              // Insertar categorías antes de "Galería de Ideas"
+              categoryLinks.forEach(link => {
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                a.href = link.href;
+                a.textContent = link.text;
+                li.appendChild(a);
+                mobileLinks.insertBefore(li, galeriaMobileLink);
+              });
+            } else {
+              // Fallback: agregar después del primer link
+              const firstMobileLink = allMobileLinks[0];
+              if (firstMobileLink && firstMobileLink.nextSibling) {
+                categoryLinks.forEach(link => {
+                  const li = document.createElement('li');
+                  const a = document.createElement('a');
+                  a.href = link.href;
+                  a.textContent = link.text;
+                  li.appendChild(a);
+                  mobileLinks.insertBefore(li, firstMobileLink.nextSibling);
+                });
+              } else {
+                categoryLinks.forEach(link => {
+                  const li = document.createElement('li');
+                  const a = document.createElement('a');
+                  a.href = link.href;
+                  a.textContent = link.text;
+                  li.appendChild(a);
+                  mobileLinks.appendChild(li);
+                });
+              }
+            }
+          }
         }
-      });
+      } catch (error) {
+        console.error('Error al cargar categorías:', error);
+      }
     }
-  });
+    
+    // Cargar categorías cuando el DOM esté listo
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function() {
+        loadCategories();
+        
+        // Actualizar contador del carrito
+        if (typeof window.updateCartCount === 'function') {
+          window.updateCartCount();
+        }
+        
+        initMenuToggle();
+      });
+    } else {
+      loadCategories();
+      
+      // Actualizar contador del carrito
+      if (typeof window.updateCartCount === 'function') {
+        window.updateCartCount();
+      }
+      
+      initMenuToggle();
+    }
+    
+    function initMenuToggle() {
+      const toggle = document.getElementById('menu-toggle');
+      const navLinks = document.getElementById('nav-links');
+
+      if (toggle && navLinks) {
+        toggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          navLinks.classList.toggle('open');
+        });
+
+        document.addEventListener('click', (e) => {
+          if (navLinks.classList.contains('open') && !navLinks.contains(e.target) && e.target.id !== 'menu-toggle') {
+            navLinks.classList.remove('open');
+          }
+        });
+      }
+    }
+  })();
 </script>
-<style>
+<style is:global>
   nav {
     background-color: #fff;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
@@ -125,6 +255,14 @@ const links = [
     gap: 1rem;
     padding: 0;
     margin: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  ul.nav-links li {
+    /* No necesita display: list-item cuando el padre es flex */
+    margin: 0;
+    padding: 0;
   }
 
   ul.nav-links li a {
@@ -132,6 +270,7 @@ const links = [
     color: #333;
     font-weight: 500;
     transition: color 0.3s;
+    display: block;
   }
 
   ul.nav-links li a:hover {
