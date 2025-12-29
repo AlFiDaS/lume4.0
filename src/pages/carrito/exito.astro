@@ -1,0 +1,54 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Breadcrumb from '../../components/Breadcrumb.astro';
+---
+
+<Layout>
+  <div class="pagina-carrito">
+    <Breadcrumb items={[
+      { text: "Inicio", href: "/" },
+      { text: "Carrito", href: "/carrito" },
+      { text: "Pago Exitoso" }
+    ]} />
+
+    <section class="carrito">
+      <div class="container">
+        <div class="carrito-header" style="text-align: center;">
+          <h1 style="color: #28a745; font-size: 2.5rem; margin-bottom: 1rem;">✅ Pago Exitoso</h1>
+          <p style="font-size: 1.2rem; color: #666; margin-bottom: 2rem;">
+            ¡Gracias por tu compra! Tu pago ha sido procesado correctamente.
+          </p>
+        </div>
+
+        <div style="max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 2rem; border-radius: 8px;">
+          <h2 style="margin-bottom: 1rem;">Próximos pasos:</h2>
+          <ul style="line-height: 2; color: #333;">
+            <li>✅ Recibirás un email de confirmación de MercadoPago</li>
+            <li>📦 Te contactaremos pronto para coordinar el envío</li>
+            <li>📞 Si tienes dudas, puedes contactarnos por WhatsApp</li>
+          </ul>
+
+          <div style="margin-top: 2rem; text-align: center;">
+            <a href="/" class="btn btn-primary" style="display: inline-block; padding: 1rem 2rem; background: #007bff; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;">
+              Volver al inicio
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script is:inline>
+    // Limpiar carrito después de pago exitoso
+    if (typeof window.saveCarrito !== 'undefined') {
+      window.saveCarrito([]);
+      if (typeof window.updateCartCount !== 'undefined') {
+        window.updateCartCount();
+      }
+    } else {
+      // Si cart.js no está cargado, limpiar directamente
+      localStorage.removeItem('carrito');
+    }
+  </script>
+</Layout>
+

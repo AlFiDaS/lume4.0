@@ -99,6 +99,16 @@ define('UPLOAD_ALLOWED_TYPES', ['image/jpeg', 'image/png', 'image/webp']);
 define('UPLOAD_EXTENSIONS', ['jpg', 'jpeg', 'png', 'webp']);
 
 // ============================================
+// CONFIGURACIÓN DE MERCADOPAGO
+// ============================================
+// Obtén tus credenciales desde: https://www.mercadopago.com.ar/developers/panel
+// Para pruebas, usa las credenciales de TEST (sandbox)
+// Para producción, usa las credenciales de PRODUCCIÓN
+define('MERCADOPAGO_ACCESS_TOKEN', 'APP_USR-6297872696175949-122918-2fa9c4b458b91df8a2ca55c7111ec21d-3100673569');
+// Credenciales de PRUEBA - Los pagos no serán reales, puedes usar tarjetas de prueba
+define('MERCADOPAGO_TEST_MODE', true);
+
+// ============================================
 // CONFIGURACIÓN GENERAL
 // ============================================
 define('SITE_NAME', 'LUME - Velas Artesanales');

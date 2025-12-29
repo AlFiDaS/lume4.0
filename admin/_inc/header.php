@@ -803,6 +803,7 @@ $currentUser = getCurrentUser();
                 <a href="<?= ADMIN_URL ?>/categorias/list.php">Categorías</a>
                 <a href="<?= ADMIN_URL ?>/ordenar.php">Ordenar</a>
                 <a href="<?= ADMIN_URL ?>/galeria/list.php">Galería</a>
+                <a href="<?= ADMIN_URL ?>/ordenes/list.php">Órdenes</a>
                 <a href="<?= ADMIN_URL ?>/logout.php" class="logout-btn">Salir</a>
             </nav>
         </div>
