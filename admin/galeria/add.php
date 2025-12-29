@@ -57,11 +57,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'visible' => isset($_POST['visible']) ? 1 : 0
         ];
         
-        // Validar prefijo
+        // Validar prefijo - ahora permite letras y números
         if (empty($formData['prefijo'])) {
             $error = 'El prefijo es requerido';
-        } elseif (!preg_match('/^[a-z]+\d*$/', $formData['prefijo'])) {
-            $error = 'El prefijo debe contener solo letras minúsculas (ej: idea, foto)';
+        } elseif (!preg_match('/^[a-z0-9]+$/', $formData['prefijo'])) {
+            $error = 'El prefijo debe contener solo letras minúsculas y números (ej: idea, idea2, foto1)';
         } else {
             // Procesar múltiples imágenes
             if (empty($_FILES['imagenes']['name'][0])) {
@@ -90,9 +90,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $uploadedPaths = []; // Para limpiar en caso de error
                         $errorDetails = []; // Detalles de errores
                         $startNumber = getNextAvailableNumber($formData['prefijo']);
-                        // Calcular orden base una sola vez al inicio
-                        $maxOrden = fetchOne("SELECT MAX(orden) as max_orden FROM galeria");
-                        $ordenBase = $maxOrden && isset($maxOrden['max_orden']) ? (int)$maxOrden['max_orden'] : 0;
+                        // Calcular orden para que aparezca PRIMERO (orden 1)
+                        // Renumerar todos los items existentes para hacer espacio
+                        $allExisting = fetchAll("SELECT id FROM galeria ORDER BY orden ASC, id ASC", []);
+                        if (!empty($allExisting)) {
+                            // Mover todos los items existentes hacia abajo (aumentar su orden en 1)
+                            foreach ($allExisting as $existing) {
+                                executeQuery("UPDATE galeria SET orden = orden + 1 WHERE id = :id", [
+                                    'id' => (int)$existing['id']
+                                ]);
+                            }
+                        }
+                        $ordenBase = 0; // Los nuevos items empezarán desde orden 1
                     
                     // Procesar cada archivo
                     for ($i = 0; $i < $fileCount; $i++) {
@@ -247,9 +256,9 @@ require_once '../_inc/header.php';
                    name="prefijo" 
                    value="<?= htmlspecialchars($formData['prefijo'] ?? 'idea') ?>" 
                    placeholder="idea"
-                   pattern="[a-z]+"
+                   pattern="[a-z0-9]+"
                    required>
-            <small>Prefijo para los nombres de las imágenes (ej: "idea" generará idea1, idea2, idea3...). Solo letras minúsculas.</small>
+            <small>Prefijo para los nombres de las imágenes (ej: "idea" generará idea1, idea2, idea3... o "idea2" generará idea21, idea22...). Letras minúsculas y números.</small>
         </div>
         
         <div class="form-group">
