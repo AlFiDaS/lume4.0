@@ -21,6 +21,7 @@
     "build:analyze": "astro build --analyze",
     "build:production": "NODE_ENV=production astro build",
     "build:versioned": "node scripts/build-with-version.js",
+    "deploy:prepare": "node scripts/deploy-to-hostinger.js",
     "lighthouse": "lighthouse http://localhost:4321 --output html --output-path ./lighthouse-report.html",
     "test:performance": "npm run build && npm run lighthouse",
     "optimize:images": "node scripts/optimize-images.js",

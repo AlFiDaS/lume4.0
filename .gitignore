@@ -1,6 +1,9 @@
 # build output
 dist/
 
+# deploy output
+deploy/
+
 # generated types
 .astro/
 
