@@ -176,8 +176,8 @@ $csrfToken = generateCSRFToken();
             <label for="price">Precio</label>
             <input type="text" id="price" name="price" 
                    value="<?= htmlspecialchars($formData['price'] ?? '') ?>"
-                   placeholder="$15900">
-            <small>Formato: $15900</small>
+                   placeholder="2400">
+            <small>Escribe solo el número (ej: 2400), el símbolo $ se agregará automáticamente</small>
         </div>
         
         <div class="form-group">
@@ -284,6 +284,53 @@ document.getElementById('slug').addEventListener('input', function(e) {
         }
     }
 });
+
+// Formatear precio automáticamente
+(function() {
+    const priceInput = document.getElementById('price');
+    
+    // Función para limpiar y formatear precio
+    function formatPrice(value) {
+        // Remover todo excepto números
+        let cleaned = value.replace(/[^\d]/g, '');
+        // Si hay números, agregar $
+        return cleaned ? '$' + cleaned : '';
+    }
+    
+    // Función para obtener solo el número (sin $)
+    function getPriceNumber(value) {
+        return value.replace(/[^\d]/g, '');
+    }
+    
+    // Cuando el usuario escribe
+    priceInput.addEventListener('input', function(e) {
+        const cursorPos = e.target.selectionStart;
+        const oldValue = e.target.value;
+        const oldLength = oldValue.length;
+        
+        // Formatear
+        const formatted = formatPrice(e.target.value);
+        e.target.value = formatted;
+        
+        // Ajustar posición del cursor
+        const newLength = formatted.length;
+        const lengthDiff = newLength - oldLength;
+        const newCursorPos = Math.max(0, cursorPos + lengthDiff);
+        e.target.setSelectionRange(newCursorPos, newCursorPos);
+    });
+    
+    // Cuando el campo pierde el foco, asegurar formato
+    priceInput.addEventListener('blur', function(e) {
+        const numValue = getPriceNumber(e.target.value);
+        e.target.value = formatPrice(numValue);
+    });
+    
+    // Al cargar la página, si tiene valor con $, mantenerlo pero permitir editar
+    const currentValue = priceInput.value;
+    if (currentValue && !currentValue.startsWith('$')) {
+        priceInput.value = formatPrice(currentValue);
+    }
+})();
 
 // Preview de imágenes
 document.getElementById('image').addEventListener('change', function(e) {

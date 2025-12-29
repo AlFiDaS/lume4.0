@@ -101,6 +101,47 @@ const canonicalURL = canonical ? new URL(canonical, Astro.site) : Astro.url;
     <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script> -->
   </head>
   <body>
+    <!-- 🔝 FORZAR SCROLL ARRIBA AL REFRESCAR -->
+    <script is:inline>
+      // Deshabilitar restauración automática del scroll del navegador
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+      }
+      
+      // Forzar scroll a arriba inmediatamente
+      window.scrollTo(0, 0);
+      
+      // Función para forzar scroll arriba
+      function scrollToTop() {
+        window.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: 'instant'
+        });
+        // También forzar el scroll del documento por si acaso
+        if (document.documentElement) {
+          document.documentElement.scrollTop = 0;
+        }
+        if (document.body) {
+          document.body.scrollTop = 0;
+        }
+      }
+      
+      // Asegurarse de que se mantenga arriba durante la carga
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', scrollToTop);
+      } else {
+        scrollToTop();
+      }
+      
+      // Y después de que todo cargue
+      window.addEventListener('load', scrollToTop);
+      
+      // También forzar después de un pequeño delay para asegurarse
+      setTimeout(scrollToTop, 100);
+      setTimeout(scrollToTop, 500);
+    </script>
+    
     <!-- 🚀 SKELETON LOADING -->
     <div id="skeleton-loader" style="display: none;">
       <div class="skeleton-navbar"></div>

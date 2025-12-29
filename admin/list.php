@@ -43,7 +43,23 @@ if ($stock !== '') {
     $params['stock'] = (int)$stock;
 }
 
-$sql .= " ORDER BY created_at DESC";
+// Ordenamiento: primero por orden (si existe), luego destacado, luego nombre
+// Mismo orden que se usa en la página web
+try {
+    $checkOrden = fetchOne("SHOW COLUMNS FROM products LIKE 'orden'");
+    if ($checkOrden) {
+        $sql .= " ORDER BY 
+            CASE WHEN orden IS NULL THEN 1 ELSE 0 END,
+            orden ASC,
+            destacado DESC, 
+            name ASC";
+    } else {
+        $sql .= " ORDER BY destacado DESC, name ASC";
+    }
+} catch (Exception $e) {
+    // Si hay error, usar ordenamiento simple
+    $sql .= " ORDER BY destacado DESC, name ASC";
+}
 
 $products = fetchAll($sql, $params);
 // Asegurar que siempre sea un array
@@ -318,6 +334,19 @@ if (!empty($buscar)) {
 
 <script>
 (function() {
+    // Función para formatear precio
+    function formatPrice(value) {
+        // Remover todo excepto números
+        let cleaned = value.replace(/[^\d]/g, '');
+        // Si hay números, agregar $
+        return cleaned ? '$' + cleaned : '';
+    }
+    
+    // Función para obtener solo el número (sin $)
+    function getPriceNumber(value) {
+        return value.replace(/[^\d]/g, '');
+    }
+    
     // Editor de precio con botones
     document.querySelectorAll('.price-editor').forEach(function(editor) {
         const productId = editor.getAttribute('data-id');
@@ -328,7 +357,31 @@ if (!empty($buscar)) {
         const saveBtn = editor.querySelector('.btn-save-price');
         const cancelBtn = editor.querySelector('.btn-cancel-price');
         
+        // Obtener valor original sin $ para comparación
         let originalValue = input.value;
+        
+        // Formatear precio automáticamente mientras escribe
+        input.addEventListener('input', function(e) {
+            const cursorPos = e.target.selectionStart;
+            const oldValue = e.target.value;
+            const oldLength = oldValue.length;
+            
+            // Formatear
+            const formatted = formatPrice(e.target.value);
+            e.target.value = formatted;
+            
+            // Ajustar posición del cursor
+            const newLength = formatted.length;
+            const lengthDiff = newLength - oldLength;
+            const newCursorPos = Math.max(0, cursorPos + lengthDiff);
+            e.target.setSelectionRange(newCursorPos, newCursorPos);
+        });
+        
+        // Cuando pierde el foco, asegurar formato
+        input.addEventListener('blur', function(e) {
+            const numValue = getPriceNumber(e.target.value);
+            e.target.value = formatPrice(numValue);
+        });
         
         // Mostrar formulario de edición
         editBtn.addEventListener('click', function() {
@@ -336,25 +389,42 @@ if (!empty($buscar)) {
             editBtn.style.display = 'none';
             editForm.style.display = 'flex';
             editForm.style.alignItems = 'center';
+            
+            // Obtener solo el número del precio actual (sin $)
+            const currentPrice = input.value;
+            const numOnly = getPriceNumber(currentPrice);
+            input.value = formatPrice(numOnly);
+            
             input.focus();
-            input.select();
+            // Seleccionar solo el número (después del $)
+            if (input.value.length > 1) {
+                input.setSelectionRange(1, input.value.length);
+            } else {
+                input.select();
+            }
         });
         
         // Guardar cambios
         saveBtn.addEventListener('click', function() {
-            const newValue = input.value.trim();
+            // Asegurar formato antes de guardar
+            const numValue = getPriceNumber(input.value);
+            const formattedValue = formatPrice(numValue);
+            input.value = formattedValue;
             
-            if (newValue === originalValue) {
+            // Comparar con valor original formateado
+            const originalFormatted = formatPrice(originalValue);
+            
+            if (formattedValue === originalFormatted) {
                 // No cambió, solo cancelar
                 cancelEdit();
                 return;
             }
             
             // Actualizar
-            updateField(productId, 'price', newValue, function(success) {
+            updateField(productId, 'price', formattedValue, function(success) {
                 if (success) {
-                    originalValue = newValue;
-                    display.textContent = newValue;
+                    originalValue = formattedValue;
+                    display.textContent = formattedValue;
                     cancelEdit();
                     
                     // Feedback visual
@@ -389,7 +459,8 @@ if (!empty($buscar)) {
         });
         
         function cancelEdit() {
-            input.value = originalValue;
+            // Restaurar valor original formateado
+            input.value = formatPrice(originalValue);
             editForm.style.display = 'none';
             display.style.display = 'inline';
             editBtn.style.display = 'inline';
