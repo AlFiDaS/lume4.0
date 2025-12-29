@@ -88,11 +88,17 @@
             return;
         }
         
-        const hoverImage = product.hoverImage || product.image;
+        // Validar y sanitizar URLs de imágenes
+        const placeholderPath = '/images/placeholder.svg';
+        const hasValidImage = product.image && product.image.trim() !== '';
+        const imageSrc = hasValidImage ? product.image : placeholderPath;
+        const hasValidHover = product.hoverImage && product.hoverImage.trim() !== '';
+        const hoverImage = hasValidHover ? product.hoverImage : imageSrc;
+        
         const stockButton = product.stock ? 
             `<button 
                 class="btn-agregar" 
-                onclick="agregarAlCarrito('${escapeHtml(product.name)}', '${escapeHtml(product.price)}', '${product.image}', '${product.slug}', '${product.categoria}')"
+                onclick="agregarAlCarrito('${escapeHtml(product.name)}', '${escapeHtml(product.price)}', '${escapeHtml(imageSrc)}', '${escapeHtml(product.slug)}', '${escapeHtml(product.categoria)}')"
             >
                 Agregar al carrito
             </button>` :
@@ -111,25 +117,27 @@
                 <div class="main-image">
                     <img 
                         id="mainProductImage"
-                        src="${product.image}" 
+                        src="${escapeHtml(imageSrc)}" 
                         alt="${escapeHtml(product.name)}"
                         class="imagen-principal"
                         loading="eager"
-                        onerror="this.onerror=null; this.src='/images/placeholder.svg';"
+                        onerror="if(this.src!=='/images/placeholder.svg'){this.onerror=null;this.src='/images/placeholder.svg';}else{this.style.display='none';}"
                     />
                 </div>
-                ${product.hoverImage ? `
+                ${hasValidHover ? `
                     <div class="thumbnails">
-                        <div class="thumbnail active" data-image="${product.image}">
+                        <div class="thumbnail active" data-image="${escapeHtml(imageSrc)}">
                             <img 
-                                src="${product.image}" 
+                                src="${escapeHtml(imageSrc)}" 
                                 alt="Vista principal"
+                                onerror="if(this.src!=='/images/placeholder.svg'){this.onerror=null;this.src='/images/placeholder.svg';}else{this.style.display='none';}"
                             />
                         </div>
-                        <div class="thumbnail" data-image="${product.hoverImage}">
+                        <div class="thumbnail" data-image="${escapeHtml(hoverImage)}">
                             <img 
-                                src="${product.hoverImage}" 
+                                src="${escapeHtml(hoverImage)}" 
                                 alt="Vista hover"
+                                onerror="if(this.src!=='/images/placeholder.svg'){this.onerror=null;this.src='/images/placeholder.svg';}else{this.style.display='none';}"
                             />
                         </div>
                     </div>
@@ -189,14 +197,14 @@
         `;
         
         // Inicializar thumbnails después de renderizar
-        if (product.hoverImage) {
+        if (hasValidHover) {
             setTimeout(() => {
                 const thumbnails = container.querySelectorAll('.thumbnail');
                 thumbnails.forEach(thumb => {
                     thumb.addEventListener('click', () => {
-                        const imageSrc = thumb.getAttribute('data-image');
-                        if (imageSrc) {
-                            changeMainImage(imageSrc);
+                        const thumbImageSrc = thumb.getAttribute('data-image');
+                        if (thumbImageSrc) {
+                            changeMainImage(thumbImageSrc);
                         }
                     });
                 });

@@ -102,9 +102,16 @@
         const stockText = !product.stock ? 'Sin stock' : 'Agregar al carrito';
         const disabledAttr = !product.stock ? 'disabled' : '';
         
-        const hoverImage = product.hoverImage || product.image;
-        const hoverAttr = product.hoverImage ? 
-            `onmouseover="this.src='${hoverImage}'" onmouseout="this.src='${product.image}'"` : 
+        // Validar y sanitizar URLs de imágenes
+        const placeholderPath = '/images/placeholder.svg';
+        const hasValidImage = product.image && product.image.trim() !== '';
+        const imageSrc = hasValidImage ? product.image : placeholderPath;
+        
+        // Hover image: usar hoverImage si existe y es válido, sino usar la imagen principal
+        const hasValidHover = product.hoverImage && product.hoverImage.trim() !== '';
+        const hoverImage = hasValidHover ? product.hoverImage : imageSrc;
+        const hoverAttr = (hasValidHover && hasValidImage) ? 
+            `onmouseover="this.src='${escapeHtml(hoverImage)}'" onmouseout="this.src='${escapeHtml(imageSrc)}'"` : 
             '';
         
         // Calcular precio de tarjeta
@@ -125,16 +132,16 @@
         return `
             <div class="product-card">
                 <div class="image-container">
-                    <a href="/${product.categoria}/${product.slug}" class="card-link">
+                    <a href="/${escapeHtml(product.categoria)}/${escapeHtml(product.slug)}" class="card-link">
                         <img
-                            src="${product.image}"
+                            src="${escapeHtml(imageSrc)}"
                             alt="${escapeHtml(product.name)} - Lume Velas Artesanales"
                             class="imagen-con-transicion"
                             width="400"
                             height="400"
                             ${hoverAttr}
                             loading="lazy"
-                            onerror="this.onerror=null; this.src='/images/placeholder.svg';"
+                            onerror="if(this.src!=='${placeholderPath}'){this.onerror=null;this.src='${placeholderPath}';}else{this.style.display='none';}"
                         />
                     </a>
                     ${!product.stock ? '<div class="sin-stock">Sin stock</div>' : ''}
