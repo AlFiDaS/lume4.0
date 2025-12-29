@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $formData = [
             'prefijo' => sanitize($_POST['prefijo'] ?? 'idea'),
-            'orden_inicial' => (int)($_POST['orden_inicial'] ?? 0),
+            'orden_inicial' => 0, // Se calculará automáticamente
             'visible' => isset($_POST['visible']) ? 1 : 0
         ];
         
@@ -90,6 +90,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $uploadedPaths = []; // Para limpiar en caso de error
                         $errorDetails = []; // Detalles de errores
                         $startNumber = getNextAvailableNumber($formData['prefijo']);
+                        // Calcular orden base una sola vez al inicio
+                        $maxOrden = fetchOne("SELECT MAX(orden) as max_orden FROM galeria");
+                        $ordenBase = $maxOrden && isset($maxOrden['max_orden']) ? (int)$maxOrden['max_orden'] : 0;
                     
                     // Procesar cada archivo
                     for ($i = 0; $i < $fileCount; $i++) {
@@ -147,7 +150,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         
                         // Generar nombre único
                         $nombre = $formData['prefijo'] . $startNumber;
-                        $orden = $formData['orden_inicial'] + $uploaded;
+                        // Calcular orden automáticamente: MAX(orden) + 1 + contador de subidas
+                        $orden = $ordenBase + $uploaded + 1;
                         
                         // Subir imagen
                         $uploadResult = uploadGaleriaImage($file, $nombre);
@@ -258,16 +262,6 @@ require_once '../_inc/header.php';
                    required>
             <small>Formatos permitidos: JPG, PNG, WEBP. Máximo: <?= UPLOAD_MAX_SIZE / 1024 / 1024 ?>MB por imagen. Puedes seleccionar múltiples archivos (Ctrl+Click o Cmd+Click).</small>
             <div id="file-count" style="margin-top: 0.5rem; color: #666; font-size: 0.875rem;"></div>
-        </div>
-        
-        <div class="form-group">
-            <label for="orden_inicial">Orden inicial</label>
-            <input type="number" 
-                   id="orden_inicial" 
-                   name="orden_inicial" 
-                   value="<?= htmlspecialchars($formData['orden_inicial'] ?? 0) ?>" 
-                   min="0">
-            <small>Número inicial para ordenar las imágenes. Las imágenes se numerarán secuencialmente desde este valor. Menor número = aparece primero.</small>
         </div>
         
         <div class="form-group">

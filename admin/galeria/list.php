@@ -25,8 +25,33 @@ $items = fetchAll($sql, []);
         </div>
     <?php else: ?>
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;" class="galeria-grid">
-            <?php foreach ($items as $item): ?>
-                <div style="background: #f8f9fa; border-radius: 8px; padding: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <?php 
+            $totalItems = count($items);
+            foreach ($items as $index => $item): 
+                $isFirst = $index === 0;
+                $isLast = $index === $totalItems - 1;
+            ?>
+                <div class="galeria-item" data-id="<?= $item['id'] ?>" data-orden="<?= $item['orden'] ?? 0 ?>" style="background: #f8f9fa; border-radius: 8px; padding: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: relative;">
+                    <!-- Botones de orden -->
+                    <div class="orden-controls">
+                        <button class="btn-orden btn-orden-left <?= $isFirst ? 'disabled' : '' ?>" 
+                                data-id="<?= $item['id'] ?>" 
+                                data-direction="up"
+                                title="Mover hacia atrás (←)"
+                                <?= $isFirst ? 'disabled' : '' ?>>
+                            <span class="desktop-only">←</span>
+                            <span class="mobile-only">↑</span>
+                        </button>
+                        <button class="btn-orden btn-orden-right <?= $isLast ? 'disabled' : '' ?>" 
+                                data-id="<?= $item['id'] ?>" 
+                                data-direction="down"
+                                title="Mover hacia adelante (→)"
+                                <?= $isLast ? 'disabled' : '' ?>>
+                            <span class="desktop-only">→</span>
+                            <span class="mobile-only">↓</span>
+                        </button>
+                    </div>
+                    
                     <div style="position: relative; margin-bottom: 1rem;">
                         <?php 
                         // Remover parámetros de cache busting para el admin
@@ -67,6 +92,155 @@ $items = fetchAll($sql, []);
         </div>
     <?php endif; ?>
 </div>
+
+<style>
+/* Controles de orden */
+.orden-controls {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    display: flex;
+    gap: 0.25rem;
+    z-index: 10;
+}
+
+.btn-orden {
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid #e0a4ce;
+    color: #e0a4ce;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 0;
+}
+
+.btn-orden:hover:not(.disabled) {
+    background: #e0a4ce;
+    color: white;
+    transform: scale(1.1);
+}
+
+.btn-orden.disabled,
+.btn-orden:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    background: rgba(240, 240, 240, 0.8);
+    border-color: #ccc;
+    color: #999;
+}
+
+.btn-orden:active:not(.disabled) {
+    transform: scale(0.95);
+}
+
+.mobile-only {
+    display: none;
+}
+
+.desktop-only {
+    display: inline;
+}
+
+/* Responsive: En mobile mostrar flechas arriba/abajo */
+@media (max-width: 768px) {
+    .mobile-only {
+        display: inline;
+    }
+    
+    .desktop-only {
+        display: none;
+    }
+    
+    .orden-controls {
+        flex-direction: column;
+        top: 0.5rem;
+        left: 0.5rem;
+    }
+    
+    .btn-orden {
+        width: 28px;
+        height: 28px;
+        font-size: 1rem;
+    }
+}
+
+/* Feedback visual al cambiar orden */
+.galeria-item.updating {
+    opacity: 0.6;
+    pointer-events: none;
+}
+</style>
+
+<script>
+(function() {
+    const ordenButtons = document.querySelectorAll('.btn-orden');
+    
+    ordenButtons.forEach(button => {
+        button.addEventListener('click', async function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (this.disabled || this.classList.contains('disabled')) {
+                return;
+            }
+            
+            const itemId = this.getAttribute('data-id');
+            const direction = this.getAttribute('data-direction');
+            const item = this.closest('.galeria-item');
+            
+            if (!itemId || !direction) {
+                console.error('Faltan datos: itemId=', itemId, 'direction=', direction);
+                alert('Error: Faltan datos necesarios');
+                return;
+            }
+            
+            // Feedback visual
+            item.classList.add('updating');
+            const allButtons = item.querySelectorAll('.btn-orden');
+            allButtons.forEach(btn => btn.disabled = true);
+            
+            try {
+                const response = await fetch('<?= ADMIN_URL ?>/api/galeria-change-order.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id: parseInt(itemId, 10),
+                        direction: direction
+                    })
+                });
+                
+                const data = await response.json();
+                
+                console.log('Respuesta del servidor:', data);
+                
+                if (data.success) {
+                    // Recargar la página para mostrar el nuevo orden
+                    window.location.reload();
+                } else {
+                    alert('Error al cambiar el orden: ' + (data.error || data.message || 'Error desconocido'));
+                    item.classList.remove('updating');
+                    allButtons.forEach(btn => btn.disabled = false);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión al cambiar el orden. Intenta nuevamente.');
+                item.classList.remove('updating');
+                allButtons.forEach(btn => btn.disabled = false);
+            }
+        });
+    });
+})();
+</script>
 
 <?php require_once '../_inc/footer.php'; ?>
 

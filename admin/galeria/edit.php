@@ -43,7 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $formData = [
             'alt' => sanitize($_POST['alt'] ?? ''),
-            'orden' => (int)($_POST['orden'] ?? 0),
+            // 'orden' ya no se puede editar desde aquí, solo con las flechas
+            'orden' => $item['orden'], // Mantener el orden actual
             'visible' => isset($_POST['visible']) ? 1 : 0,
             'imagen' => $item['imagen']
         ];
@@ -146,13 +147,9 @@ require_once '../_inc/header.php';
         </div>
         
         <div class="form-group">
-            <label for="orden">Orden</label>
-            <input type="number" 
-                   id="orden" 
-                   name="orden" 
-                   value="<?= htmlspecialchars($formData['orden'] ?? 0) ?>" 
-                   min="0">
-            <small>Número para ordenar las imágenes. Menor número = aparece primero.</small>
+            <div style="padding: 1rem; background: #e3f2fd; border-left: 4px solid #2196f3; border-radius: 4px; margin-bottom: 1rem;">
+                <strong>ℹ️ Orden:</strong> Para cambiar el orden de esta imagen, usa las flechas (← → o ↑ ↓) en la página de <a href="list.php" style="color: #1976d2; text-decoration: underline;">lista de imágenes</a>.
+            </div>
         </div>
         
         <div class="form-group">
