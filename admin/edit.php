@@ -7,6 +7,7 @@ require_once '../config.php';
 require_once '../helpers/upload.php';
 require_once '../helpers/slugify.php';
 require_once '../helpers/categories.php';
+require_once '../helpers/cache-bust.php';
 
 // Necesitamos autenticación pero sin incluir el header todavía
 if (!defined('LUME_ADMIN')) {
@@ -196,6 +197,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $uploadResult = uploadProductImage($_FILES['hoverImage'], $formData['slug'], $formData['categoria'], 'hover');
                     if ($uploadResult['success']) {
                         $formData['hoverImage'] = $uploadResult['path'];
+                    } else {
+                        $error = $uploadResult['error'] ?? 'Error al subir la imagen hover';
                     }
                 }
                 
@@ -322,8 +325,10 @@ $csrfToken = generateCSRFToken();
             <label>Imagen Principal Actual</label>
             <?php if (!empty($formData['image'])): ?>
                 <?php 
-                // Remover parámetros de cache busting para el admin
-                $imageUrl = preg_replace('/\?.*$/', '', $formData['image']);
+                // Limpiar ruta base (sin parámetros previos)
+                $cleanImagePath = preg_replace('/\?.*$/', '', $formData['image']);
+                // Agregar cache busting para asegurar que se muestre la versión más reciente
+                $imageUrl = addCacheBust($cleanImagePath);
                 $fullImageUrl = BASE_URL . $imageUrl;
                 ?>
                 <div style="margin-bottom: 1rem;">
@@ -347,8 +352,10 @@ $csrfToken = generateCSRFToken();
             <label>Imagen Hover Actual</label>
             <?php if (!empty($formData['hoverImage'])): ?>
                 <?php 
-                // Remover parámetros de cache busting para el admin
-                $hoverImageUrl = preg_replace('/\?.*$/', '', $formData['hoverImage']);
+                // Limpiar ruta base (sin parámetros previos)
+                $cleanHoverImagePath = preg_replace('/\?.*$/', '', $formData['hoverImage']);
+                // Agregar cache busting para asegurar que se muestre la versión más reciente
+                $hoverImageUrl = addCacheBust($cleanHoverImagePath);
                 $fullHoverImageUrl = BASE_URL . $hoverImageUrl;
                 ?>
                 <div style="margin-bottom: 1rem;">

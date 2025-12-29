@@ -88,9 +88,9 @@ function uploadProductImage($file, $slug, $categoria, $filename = 'main') {
         return ['success' => false, 'path' => null, 'error' => $validation['error']];
     }
     
-    // Validar categoría
-    if (!in_array($categoria, ['productos', 'souvenirs', 'navidad'])) {
-        return ['success' => false, 'path' => null, 'error' => 'Categoría inválida'];
+    // Validar que la categoría no esté vacía (la validación de existencia se hace antes de llamar a esta función)
+    if (empty($categoria)) {
+        return ['success' => false, 'path' => null, 'error' => 'Categoría no especificada'];
     }
     
     // Crear estructura de directorios: images/categoria/slug/
@@ -184,10 +184,9 @@ function moveProductImages($slug, $categoriaAnterior, $categoriaNueva) {
         return ['success' => true, 'imagePath' => null, 'hoverImagePath' => null, 'error' => null];
     }
     
-    // Validar categorías
-    if (!in_array($categoriaAnterior, ['productos', 'souvenirs', 'navidad']) || 
-        !in_array($categoriaNueva, ['productos', 'souvenirs', 'navidad'])) {
-        return ['success' => false, 'imagePath' => null, 'hoverImagePath' => null, 'error' => 'Categorías inválidas'];
+    // Validar que las categorías no estén vacías (la validación de existencia se hace antes de llamar a esta función)
+    if (empty($categoriaAnterior) || empty($categoriaNueva)) {
+        return ['success' => false, 'imagePath' => null, 'hoverImagePath' => null, 'error' => 'Categorías no especificadas'];
     }
     
     $oldFolder = IMAGES_PATH . '/' . $categoriaAnterior . '/' . $slug;

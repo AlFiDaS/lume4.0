@@ -5,6 +5,7 @@
 $pageTitle = 'Lista de Productos';
 require_once '../config.php';
 require_once '../helpers/categories.php';
+require_once '../helpers/cache-bust.php';
 require_once '_inc/header.php';
 
 // Filtros
@@ -191,8 +192,10 @@ if (!empty($buscar)) {
                         <td data-label="Imagen">
                             <?php if (!empty($product['image'])): ?>
                                 <?php 
-                                // Remover parámetros de cache busting para el admin
-                                $imageUrl = preg_replace('/\?.*$/', '', $product['image']);
+                                // Limpiar ruta base (sin parámetros previos)
+                                $cleanImagePath = preg_replace('/\?.*$/', '', $product['image']);
+                                // Agregar cache busting para asegurar que se muestre la versión más reciente
+                                $imageUrl = addCacheBust($cleanImagePath);
                                 // Construir URL completa
                                 $fullImageUrl = BASE_URL . $imageUrl;
                                 ?>

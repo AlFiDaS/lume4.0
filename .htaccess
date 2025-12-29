@@ -13,9 +13,8 @@
     
     # PRIORIDAD 1: Mapear /images/ a /public/images/ (DEBE IR PRIMERO)
     # Las imágenes se guardan en public/images/ pero se sirven desde /images/
-    # Esta regla debe ejecutarse ANTES de las demás para que funcione correctamente
+    # Esta regla SIEMPRE redirige /images/ a /public/images/, incluso si existe una carpeta /images/ en la raíz
     RewriteCond %{REQUEST_URI} ^/images/
-    RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^images/(.*)$ public/images/$1 [L]
     
     # PRIORIDAD 2: Archivos y directorios existentes (no hacer nada)
