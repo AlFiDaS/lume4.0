@@ -75,13 +75,22 @@ try {
     $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
     $baseUrl = $protocol . '://' . $host;
 
+    // Determinar método de pago
+    $paymentMethod = $data['payment_method'] ?? 'mercadopago_transferencia';
+    $isTarjeta = ($paymentMethod === 'tarjeta');
+    $isMercadoPagoTransferencia = ($paymentMethod === 'mercadopago_transferencia');
+    
     // Preparar items para MercadoPago
     $preferenceItems = [];
     foreach ($items as $item) {
         // Extraer precio numérico (remover $ y convertir a número)
         $price = floatval(str_replace(['$', ',', '.'], '', $item['price']));
         
-        // Si el precio tiene decimales, convertir a centavos
+        // Si es tarjeta, aplicar 25% adicional
+        if ($isTarjeta) {
+            $price = round($price * 1.25);
+        }
+        
         // En Argentina, MercadoPago espera el precio en pesos como número decimal
         $preferenceItems[] = [
             'title' => $item['name'],
@@ -100,7 +109,32 @@ try {
         $totalAmount += $item['unit_price'] * $item['quantity'];
     }
     
-    // Preparar datos de envío
+    // Agregar costo de envío si aplica
+    $envioCosto = 0;
+    $shippingType = $data['shipping']['type'] ?? '';
+    if (strpos($shippingType, 'Correo Argentino - Sucursal') !== false) {
+        $envioCosto = 6500;
+    } elseif (strpos($shippingType, 'Correo Argentino - Domicilio') !== false) {
+        $envioCosto = 8500;
+    }
+    
+    // Aplicar 25% al envío si es tarjeta
+    if ($isTarjeta && $envioCosto > 0) {
+        $envioCosto = round($envioCosto * 1.25);
+    }
+    
+    // Agregar envío como item adicional si tiene costo
+    if ($envioCosto > 0) {
+        $preferenceItems[] = [
+            'title' => 'Envío',
+            'quantity' => 1,
+            'unit_price' => $envioCosto,
+            'currency_id' => 'ARS'
+        ];
+        $totalAmount += $envioCosto;
+    }
+    
+    // Preparar datos de envío (ya calculado arriba)
     $shippingType = $data['shipping']['type'] ?? '';
     $shippingAddress = '';
     if (!empty($data['shipping'])) {
@@ -163,8 +197,22 @@ try {
         'metadata' => [
             'order_id' => $orderId,
             'cart_data' => json_encode($data)
+        ],
+        'payment_methods' => [
+            'installments' => $isTarjeta ? 3 : 1, // Máximo de cuotas (3 si es tarjeta, 1 si es MercadoPago transferencia)
+            'excluded_payment_methods' => [],
+            'excluded_payment_types' => $isTarjeta ? [
+                ['id' => 'bank_transfer'] // Si es tarjeta, excluir transferencia bancaria
+            ] : ($isMercadoPagoTransferencia ? [
+                ['id' => 'credit_card'], // Si es MercadoPago transferencia, excluir tarjetas
+                ['id' => 'debit_card']
+            ] : []) // Permitir todo (no debería llegar aquí)
         ]
     ];
+    
+    // Si es tarjeta, configurar cuotas sin interés (hasta 3 cuotas)
+    // Nota: Las cuotas sin interés deben estar habilitadas en el panel de MercadoPago
+    // Esto solo configura el máximo de cuotas permitidas
 
     // Crear preferencia usando cURL (sin necesidad de SDK)
     $ch = curl_init('https://api.mercadopago.com/checkout/preferences');

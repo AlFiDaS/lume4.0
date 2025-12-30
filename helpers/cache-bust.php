@@ -26,8 +26,10 @@ function addCacheBust($imagePath) {
     $separator = strpos($imagePath, '?') !== false ? '&' : '?';
     
     // Obtener timestamp de modificación del archivo
-    // La ruta en BD es /images/... (ruta web), pero físicamente está en public/images/...
-    $fullPath = BASE_PATH . '/public' . $imagePath;
+    // La ruta en BD es /images/... (ruta web), convertir a ruta física usando IMAGES_PATH
+    // Remover el prefijo /images/ de la ruta relativa
+    $relativePath = preg_replace('#^/images/#', '', $imagePath);
+    $fullPath = IMAGES_PATH . '/' . $relativePath;
     
     if (file_exists($fullPath)) {
         $timestamp = filemtime($fullPath);

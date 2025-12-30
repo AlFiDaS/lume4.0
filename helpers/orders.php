@@ -32,6 +32,7 @@ function saveOrder($orderData) {
         payer_email,
         payer_phone,
         payer_document,
+        proof_image,
         items,
         total_amount,
         payment_method,
@@ -50,6 +51,7 @@ function saveOrder($orderData) {
         :payer_email,
         :payer_phone,
         :payer_document,
+        :proof_image,
         :items,
         :total_amount,
         :payment_method,
@@ -70,6 +72,7 @@ function saveOrder($orderData) {
         'payer_email' => $orderData['payer_email'] ?? null,
         'payer_phone' => $orderData['payer_phone'] ?? null,
         'payer_document' => $orderData['payer_document'] ?? null,
+        'proof_image' => $orderData['proof_image'] ?? null,
         'items' => is_array($orderData['items']) ? json_encode($orderData['items']) : $orderData['items'],
         'total_amount' => $orderData['total_amount'] ?? null,
         'payment_method' => $orderData['payment_method'] ?? null,
@@ -99,7 +102,7 @@ function updateOrder($orderId, $orderData) {
     
     $allowedFields = [
         'mercadopago_id', 'preference_id', 'external_reference', 'status', 'status_detail',
-        'payer_name', 'payer_email', 'payer_phone', 'payer_document',
+        'payer_name', 'payer_email', 'payer_phone', 'payer_document', 'proof_image',
         'items', 'total_amount', 'payment_method', 'payment_type',
         'shipping_type', 'shipping_address', 'notes', 'metadata'
     ];

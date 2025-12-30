@@ -40,5 +40,39 @@ import Breadcrumb from '../../components/Breadcrumb.astro';
       </div>
     </section>
   </div>
+
+  <script is:inline>
+    // Cancelar la orden cuando el usuario llega a esta página
+    // MercadoPago puede pasar preference_id en la URL, o podemos obtenerlo de sessionStorage
+    (function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      // Intentar obtener preference_id de la URL primero (MercadoPago lo pasa cuando redirige)
+      let preferenceId = urlParams.get('preference_id');
+      
+      // Si no está en la URL, intentar obtenerlo de sessionStorage (lo guardamos antes de redirigir)
+      if (!preferenceId) {
+        preferenceId = sessionStorage.getItem('mp_preference_id');
+      }
+
+      // Si tenemos preference_id, cancelar la orden
+      if (preferenceId) {
+        fetch('/api/orders/cancel-order.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            preference_id: preferenceId
+          })
+        }).then(() => {
+          // Limpiar sessionStorage después de cancelar
+          sessionStorage.removeItem('mp_preference_id');
+        }).catch(err => {
+          // Silenciar errores, no es crítico si falla
+          console.error('Error al cancelar orden:', err);
+        });
+      }
+    })();
+  </script>
 </Layout>
 

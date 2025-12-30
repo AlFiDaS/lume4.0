@@ -144,6 +144,47 @@ function uploadProductImage($file, $slug, $categoria, $filename = 'main') {
 }
 
 /**
+ * Subir comprobante de pago (transferencia)
+ * @param array $file ($_FILES['campo'])
+ * @param int $orderId ID de la orden (para nombrar el archivo)
+ * @return array ['success' => bool, 'path' => string|null, 'error' => string|null]
+ */
+function uploadProofImage($file, $orderId) {
+    // Validar archivo
+    $validation = validateUploadedFile($file);
+    if (!$validation['valid']) {
+        return ['success' => false, 'path' => null, 'error' => $validation['error']];
+    }
+    
+    // Crear directorio de comprobantes si no existe
+    $proofsDir = IMAGES_PATH . '/proofs';
+    if (!is_dir($proofsDir)) {
+        if (!mkdir($proofsDir, 0755, true)) {
+            return ['success' => false, 'path' => null, 'error' => 'No se pudo crear el directorio de comprobantes'];
+        }
+    }
+    
+    // Generar nombre de archivo: order_{orderId}_{timestamp}.ext
+    $ext = $validation['ext'];
+    $timestamp = time();
+    $filename = 'order_' . $orderId . '_' . $timestamp . '.' . $ext;
+    $destination = $proofsDir . '/' . $filename;
+    
+    // Mover archivo
+    if (!move_uploaded_file($file['tmp_name'], $destination)) {
+        return ['success' => false, 'path' => null, 'error' => 'Error al mover el archivo'];
+    }
+    
+    // Asegurar permisos
+    chmod($destination, 0644);
+    
+    // Retornar ruta relativa: /images/proofs/order_{id}_{timestamp}.ext
+    $relativePath = '/images/proofs/' . $filename;
+    
+    return ['success' => true, 'path' => $relativePath, 'error' => null];
+}
+
+/**
  * Eliminar imagen
  * @param string $imagePath (ruta relativa desde raíz, ej: '/images/vela-xoxo/main.webp')
  * @return bool
@@ -156,8 +197,11 @@ function deleteProductImage($imagePath) {
     // Remover parámetros de cache busting si existen
     $cleanPath = preg_replace('/\?.*$/', '', $imagePath);
     
-    // Construir ruta completa
-    $fullPath = BASE_PATH . '/public' . $cleanPath;
+    // Construir ruta completa usando IMAGES_PATH (ya está configurado correctamente según el entorno)
+    // La ruta relativa viene como /images/... así que necesitamos construir la ruta física
+    // Remover el prefijo /images/ de la ruta relativa
+    $relativePath = preg_replace('#^/images/#', '', $cleanPath);
+    $fullPath = IMAGES_PATH . '/' . $relativePath;
     
     // Verificar que el archivo existe y está en el directorio de imágenes
     if (file_exists($fullPath) && strpos($fullPath, IMAGES_PATH) !== false) {

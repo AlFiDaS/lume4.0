@@ -63,9 +63,33 @@ import Breadcrumb from '../components/Breadcrumb.astro';
                 <div class="form-group">
                   <label for="pago">Forma de pago</label>
                   <select id="pago">
-                    <option value="transferencia">Transferencia</option>
-                    <option value="tarjeta">Tarjeta (+25%) - hasta en 3 cuotas</option>
+                    <option value="mercadopago_transferencia">MercadoPago (Transferencia)</option>
+                    <option value="transferencia_directa">Transferencia directa</option>
+                    <option value="tarjeta">Tarjeta (+25%) - hasta en 3 cuotas sin interés</option>
                   </select>
+                </div>
+                
+                <!-- Datos bancarios (solo se muestra si es transferencia directa) -->
+                <div id="datos-bancarios" class="datos-bancarios" style="display: none;">
+                  <div class="form-group">
+                    <label>Datos para transferencia:</label>
+                    <div class="datos-transferencia">
+                      <p><strong>Alias:</strong> <span>lume.co.mp</span></p>
+                      <p><strong>Titular:</strong> <span>Gisela Gabriela Guerra</span></p>
+                      <p><strong>Total a transferir:</strong> <span id="total-transferir">$0</span></p>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="proof_image">Comprobante de pago *</label>
+                    <input type="file" id="proof_image" accept="image/jpeg,image/png,image/webp" style="display: none;" />
+                    <small>Sube una imagen del comprobante de transferencia (JPG, PNG o WEBP - máx. 5MB)</small>
+                    <button type="button" id="btn-subir-comprobante" class="btn-subir-comprobante">
+                      📎 Subir comprobante de pago
+                    </button>
+                    <div id="proof-preview" style="display: none; margin-top: 0.5rem;">
+                      <img id="proof-preview-img" src="" alt="Vista previa" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 1px solid #ddd;" />
+                    </div>
+                  </div>
                 </div>
 
                 <div class="form-group">
@@ -116,12 +140,9 @@ import Breadcrumb from '../components/Breadcrumb.astro';
                 <button id="btn-finalizar" class="btn-finalizar" type="button">
                   💳 Pagar con MercadoPago
                 </button>
-                <a id="btn-whatsapp" class="btn-whatsapp" href="#" target="_blank" style="display: none; margin-top: 1rem;">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
-                  </svg>
-                  O pagar por WhatsApp
-                </a>
+                <button id="btn-finalizar-directa" class="btn-finalizar-directa" type="button" style="display: none;">
+                  ✅ Confirmar pedido
+                </button>
               </form>
             </div>
           </div>
@@ -254,13 +275,48 @@ import Breadcrumb from '../components/Breadcrumb.astro';
           envioTexto = "A coordinar precio";
       }
 
-      let totalConTarjeta = pago === 'tarjeta' ? Math.round(totalCarrito * 1.25) : totalCarrito;
-      let envioConTarjeta = pago === 'tarjeta' ? Math.round(envioCosto * 1.25) : envioCosto;
-      let totalFinal = totalConTarjeta + envioConTarjeta;
+      // Calcular precios según método de pago
+      const isTarjeta = (pago === 'tarjeta');
+      const isTransferenciaDirecta = (pago === 'transferencia_directa');
+      
+      let subtotalCalculado = totalCarrito;
+      let envioCalculado = envioCosto;
+      
+      if (isTarjeta) {
+        subtotalCalculado = Math.round(totalCarrito * 1.25);
+        envioCalculado = Math.round(envioCosto * 1.25);
+      }
+      
+      let totalFinal = subtotalCalculado + envioCalculado;
 
-      carritoTotalEl.textContent = `$${totalConTarjeta}`;
-      envioInfoEl.textContent = pago === 'tarjeta' ? `$${envioConTarjeta} (+25%)` : envioTexto;
+      carritoTotalEl.textContent = `$${subtotalCalculado}`;
+      envioInfoEl.textContent = isTarjeta ? `$${envioCalculado} (+25%)` : envioTexto;
       totalEl.textContent = `$${totalFinal}`;
+      
+      // Mostrar/ocultar datos bancarios y botones según método de pago
+      const datosBancarios = document.getElementById('datos-bancarios');
+      const totalTransferir = document.getElementById('total-transferir');
+      const btnFinalizar = document.getElementById('btn-finalizar');
+      const btnFinalizarDirecta = document.getElementById('btn-finalizar-directa');
+      const proofImageInput = document.getElementById('proof_image');
+      
+      if (isTransferenciaDirecta) {
+        if (datosBancarios) datosBancarios.style.display = 'block';
+        if (totalTransferir) totalTransferir.textContent = `$${totalFinal}`;
+        if (btnFinalizar) btnFinalizar.style.display = 'none';
+        if (btnFinalizarDirecta) btnFinalizarDirecta.style.display = 'inline-block';
+        // NO resetear el input aquí, solo reconfigurar el handler si es necesario
+        // Configurar el handler después de un pequeño delay para asegurar que el DOM esté listo
+        setTimeout(() => {
+          if (typeof setupProofImageChangeHandler === 'function') {
+            setupProofImageChangeHandler();
+          }
+        }, 50);
+      } else {
+        if (datosBancarios) datosBancarios.style.display = 'none';
+        if (btnFinalizar) btnFinalizar.style.display = 'inline-block';
+        if (btnFinalizarDirecta) btnFinalizarDirecta.style.display = 'none';
+      }
 
       let datosCliente = `*Datos del cliente:*\nNombre: ${nombre}\nTipo de envío: ${envio}`;
 
@@ -272,12 +328,19 @@ import Breadcrumb from '../components/Breadcrumb.astro';
         datosCliente += `\nProvincia: ${get('provincia')}\nLocalidad: ${get('localidad')}\nDirección: ${get('direccion')}\nCP: ${get('cp')}\nEmail: ${get('email')}\nObservaciones: ${get('observaciones')}`;
       }
 
+      let metodoPagoTexto = 'MercadoPago (Transferencia)';
+      if (pago === 'tarjeta') {
+        metodoPagoTexto = 'Tarjeta (+25% hasta en 3 cuotas sin interés)';
+      } else if (pago === 'transferencia_directa') {
+        metodoPagoTexto = 'Transferencia directa (alias: lume.co.mp)';
+      }
+      
       const texto = encodeURIComponent(`Hola *Lume*, me gustaría hacer un pedido de:
 ${carrito.map(p => `• ${p.name} - ${p.price} x${p.cantidad}`).join("\n")}
-Forma de pago: ${pago === 'tarjeta' ? 'Tarjeta (+25% hasta en 3 cuotas)' : 'Transferencia'}
+Forma de pago: ${metodoPagoTexto}
 Aclaraciones: ${get('aclaraciones') || 'Ninguna'}
-*Tu carrito: $${totalConTarjeta}*
-Envío: ${envioTexto}
+*Tu carrito: $${subtotalCalculado}*
+Envío: ${isTarjeta ? `$${envioCalculado} (+25%)` : envioTexto}
 *Total a pagar: $${totalFinal}*
 
 ${datosCliente}
@@ -313,6 +376,14 @@ Gracias!`);
       if (!telefono) {
         alert('Por favor, completa tu número de teléfono');
         document.getElementById('telefono')?.focus();
+        return;
+      }
+      
+      // Verificar método de pago
+      const pago = document.getElementById('pago')?.value || '';
+      if (pago === 'transferencia_directa') {
+        // No debería llegar aquí, pero por seguridad
+        alert('Para transferencia directa, usa el botón "Confirmar pedido"');
         return;
       }
 
@@ -361,6 +432,10 @@ Gracias!`);
         const data = await response.json();
 
         if (data.success && data.checkout_url) {
+          // Guardar preference_id en sessionStorage para poder cancelar la orden si el usuario no completa el pago
+          if (data.preference_id) {
+            sessionStorage.setItem('mp_preference_id', data.preference_id);
+          }
           // Redirigir a MercadoPago
           window.location.href = data.checkout_url;
         } else {
@@ -376,7 +451,7 @@ Gracias!`);
       }
     }
 
-    // Agregar evento al botón
+    // Agregar evento al botón de MercadoPago
     if (finalizarBtn) {
       finalizarBtn.addEventListener('click', (e) => {
         e.preventDefault(); // Prevenir submit del formulario
@@ -384,6 +459,180 @@ Gracias!`);
         crearPreferenciaMercadoPago();
       });
     }
+    
+    // Inicializar event listeners del comprobante usando delegación de eventos
+    // Esto asegura que funcione incluso si los elementos se recrean
+    document.addEventListener('click', (e) => {
+      const btnSubirComprobante = e.target.closest('#btn-subir-comprobante');
+      if (!btnSubirComprobante) return;
+      
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const proofImageInput = document.getElementById('proof_image');
+      if (proofImageInput) {
+        proofImageInput.click();
+      }
+    });
+    
+    // Event listener para el cambio de archivo usando delegación de eventos
+    // Escuchar en el document porque el input puede recrearse
+    let proofImageChangeHandler = null;
+    function setupProofImageChangeHandler() {
+      const proofImageInput = document.getElementById('proof_image');
+      if (!proofImageInput) return;
+      
+      // Remover handler anterior si existe
+      if (proofImageChangeHandler) {
+        proofImageInput.removeEventListener('change', proofImageChangeHandler);
+      }
+      
+      // Crear nuevo handler
+      proofImageChangeHandler = (e) => {
+        const file = e.target.files[0];
+        const proofPreview = document.getElementById('proof-preview');
+        const proofPreviewImg = document.getElementById('proof-preview-img');
+        const btnSubirComprobante = document.getElementById('btn-subir-comprobante');
+        
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (loadEvent) => {
+            if (proofPreviewImg) {
+              proofPreviewImg.src = loadEvent.target.result;
+            }
+            if (proofPreview) {
+              proofPreview.style.display = 'block';
+            }
+            // Cambiar texto del botón de subir a indicar que ya hay archivo
+            if (btnSubirComprobante) {
+              btnSubirComprobante.textContent = '📎 Cambiar comprobante';
+            }
+          };
+          reader.onerror = () => {
+            console.error('Error al leer el archivo');
+            alert('Error al leer el archivo. Por favor, intenta con otra imagen.');
+          };
+          reader.readAsDataURL(file);
+        } else {
+          if (proofPreview) {
+            proofPreview.style.display = 'none';
+          }
+          if (btnSubirComprobante) {
+            btnSubirComprobante.textContent = '📎 Subir comprobante de pago';
+          }
+        }
+      };
+      
+      // Agregar el handler
+      proofImageInput.addEventListener('change', proofImageChangeHandler);
+    }
+    
+    // Configurar el handler inicial y después de cada render
+    setupProofImageChangeHandler();
+    
+    // Agregar evento al botón de confirmar pedido (transferencia directa) usando delegación de eventos
+    document.addEventListener('click', async (e) => {
+      const btnFinalizarDirecta = e.target.closest('#btn-finalizar-directa');
+      if (!btnFinalizarDirecta) return;
+      
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const proofImageInput = document.getElementById('proof_image');
+      if (!proofImageInput) return;
+      
+      // Verificar que el método de pago sea transferencia directa
+      const pago = document.getElementById('pago')?.value || '';
+      if (pago !== 'transferencia_directa') return;
+      
+      const nombre = document.getElementById('nombre')?.value;
+      if (!nombre) {
+        alert('Por favor, completa tu nombre');
+        document.getElementById('nombre')?.focus();
+        return;
+      }
+      
+      const telefono = document.getElementById('telefono')?.value;
+      if (!telefono) {
+        alert('Por favor, completa tu número de teléfono');
+        document.getElementById('telefono')?.focus();
+        return;
+      }
+      
+      // Verificar si hay comprobante subido
+      const proofFile = proofImageInput.files[0];
+      if (!proofFile) {
+        alert('Para confirmar su pedido tiene que subir el comprobante de pago');
+        return;
+      }
+      
+      // Deshabilitar botón mientras procesa
+      btnFinalizarDirecta.disabled = true;
+      btnFinalizarDirecta.textContent = 'Procesando...';
+      
+      try {
+        // Obtener datos del carrito
+        const carrito = getCarrito();
+        
+        // Calcular total
+        let totalCarrito = 0;
+        carrito.forEach(item => {
+          totalCarrito += parseInt(item.price.replace('$', '')) * item.cantidad;
+        });
+        
+        const envio = document.getElementById('envio')?.value || '';
+        let envioCosto = 0;
+        if (envio.includes('Correo Argentino - Sucursal')) {
+          envioCosto = 6500;
+        } else if (envio.includes('Correo Argentino - Domicilio')) {
+          envioCosto = 8500;
+        }
+        
+        const totalFinal = totalCarrito + envioCosto;
+        
+        // Preparar FormData
+        const formData = new FormData();
+        formData.append('proof_image', proofFile);
+        formData.append('nombre', nombre);
+        formData.append('telefono', telefono);
+        formData.append('email', document.getElementById('email')?.value || '');
+        formData.append('total_amount', totalFinal);
+        formData.append('items', JSON.stringify(carrito.map(item => ({
+          name: item.name,
+          price: item.price,
+          cantidad: item.cantidad
+        }))));
+        formData.append('shipping', JSON.stringify({
+          type: envio,
+          address: document.getElementById('direccion')?.value || '',
+          province: document.getElementById('provincia')?.value || '',
+          locality: document.getElementById('localidad')?.value || '',
+          postal_code: document.getElementById('cp')?.value || ''
+        }));
+        formData.append('notes', document.getElementById('aclaraciones')?.value || '');
+        
+        const response = await fetch('/api/orders/create-direct-transfer.php', {
+          method: 'POST',
+          body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // Limpiar carrito
+          saveCarrito([]);
+          // Redirigir a página de pendiente (transferencia directa requiere confirmación)
+          window.location.href = '/carrito/pendiente';
+        } else {
+          alert('Error al crear el pedido: ' + (data.error || 'Error desconocido'));
+          btnFinalizarDirecta.disabled = false;
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error de conexión. Por favor, intenta nuevamente.');
+        btnFinalizarDirecta.disabled = false;
+      }
+    });
     
     // También prevenir submit del formulario si se presiona Enter
     const formDatos = document.getElementById('form-datos');
@@ -431,6 +680,7 @@ Gracias!`);
     });
 
     document.getElementById("form-datos").addEventListener("input", renderCarrito);
+    document.getElementById("pago").addEventListener("change", renderCarrito);
     document.getElementById("envio").addEventListener("change", () => {
       actualizarFormularioEnvio();
       renderCarrito();

@@ -132,6 +132,30 @@ Una vez que hayas probado todo y estés listo para recibir pagos reales:
 
 ---
 
+## 💳 Configurar Cuotas Sin Interés (3 cuotas)
+
+Para que aparezcan las **3 cuotas sin interés** cuando el cliente paga con tarjeta:
+
+1. Inicia sesión en tu cuenta de MercadoPago
+2. Ve a **"Tu negocio"** → **"Costos y cuotas"**
+3. En la sección **"Por ofrecer cuotas"**, busca **"Cuotas sin interés"**
+4. Haz clic en **"Ofrecer"** y activa la opción
+5. Elige **"3 cuotas"** como el máximo de cuotas sin interés
+
+**Importante:**
+- Cuando ofreces cuotas sin interés, MercadoPago aplica una comisión adicional (aproximadamente 12.55% para 3 cuotas)
+- Esta comisión la pagas tú como vendedor, no el cliente
+- El código ya está configurado para mostrar hasta 3 cuotas cuando se selecciona "Tarjeta"
+
+## 💰 Diferenciación de Precios (Transferencia vs Tarjeta)
+
+El sistema diferencia automáticamente los precios según el método de pago:
+
+- **Transferencia/Efectivo**: Precio original (sin recargo)
+- **Tarjeta de crédito**: Precio + 25% (hasta 3 cuotas sin interés)
+
+El recargo del 25% se aplica automáticamente tanto a los productos como al costo de envío cuando se selecciona "Tarjeta" en el carrito.
+
 ## ❓ Troubleshooting
 
 ### Error: "MercadoPago no está configurado"
@@ -146,6 +170,11 @@ Una vez que hayas probado todo y estés listo para recibir pagos reales:
 - Verifica que la URL del webhook sea accesible públicamente
 - Revisa los logs en: `logs/mercadopago-webhook.log`
 - Verifica que el servidor pueda recibir solicitudes POST
+
+### No aparecen las 3 cuotas sin interés
+- Verifica que hayas activado "Cuotas sin interés" en el panel de MercadoPago (ver sección arriba)
+- Asegúrate de que el método de pago seleccionado sea "Tarjeta" y no "Transferencia"
+- Las cuotas sin interés solo aparecen cuando el método de pago es tarjeta de crédito
 
 ---
 

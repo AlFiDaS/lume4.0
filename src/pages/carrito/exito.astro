@@ -1,6 +1,9 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import Breadcrumb from '../../components/Breadcrumb.astro';
+
+// Obtener tipo de pago de la URL
+const tipoPago = Astro.url.searchParams.get('tipo') || 'mercadopago';
 ---
 
 <Layout>
@@ -8,25 +11,46 @@ import Breadcrumb from '../../components/Breadcrumb.astro';
     <Breadcrumb items={[
       { text: "Inicio", href: "/" },
       { text: "Carrito", href: "/carrito" },
-      { text: "Pago Exitoso" }
+      { text: tipoPago === 'transferencia_directa' ? "Pedido Creado" : "Pago Exitoso" }
     ]} />
 
     <section class="carrito">
       <div class="container">
         <div class="carrito-header" style="text-align: center;">
-          <h1 style="color: #28a745; font-size: 2.5rem; margin-bottom: 1rem;">✅ Pago Exitoso</h1>
-          <p style="font-size: 1.2rem; color: #666; margin-bottom: 2rem;">
-            ¡Gracias por tu compra! Tu pago ha sido procesado correctamente.
-          </p>
+          {tipoPago === 'transferencia_directa' ? (
+            <>
+              <h1 style="color: #ffc107; font-size: 2.5rem; margin-bottom: 1rem;">✅ Pago a Confirmar</h1>
+              <p style="font-size: 1.2rem; color: #666; margin-bottom: 2rem;">
+                ¡Gracias por tu pedido! Hemos recibido tu comprobante de pago y está <strong>pendiente de confirmación</strong>.
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 style="color: #28a745; font-size: 2.5rem; margin-bottom: 1rem;">✅ Pago Exitoso</h1>
+              <p style="font-size: 1.2rem; color: #666; margin-bottom: 2rem;">
+                ¡Gracias por tu compra! Tu pago ha sido procesado correctamente.
+              </p>
+            </>
+          )}
         </div>
 
         <div style="max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 2rem; border-radius: 8px;">
           <h2 style="margin-bottom: 1rem;">Próximos pasos:</h2>
-          <ul style="line-height: 2; color: #333;">
-            <li>✅ Recibirás un email de confirmación de MercadoPago</li>
-            <li>📦 Te contactaremos pronto para coordinar el envío</li>
-            <li>📞 Si tienes dudas, puedes contactarnos por WhatsApp</li>
-          </ul>
+          {tipoPago === 'transferencia_directa' ? (
+            <ul style="line-height: 2; color: #333;">
+              <li>⏳ Revisaremos tu comprobante de pago.</li>
+              <li>📱 En los próximos minutos nos comunicaremos con usted por WhatsApp para avisarle la confirmación de su pedido.</li>
+              <li>📦 Una vez confirmado, te contactaremos para coordinar el envío.</li>
+              <li>📞 Si tienes dudas, puedes contactarnos por WhatsApp.</li>
+            </ul>
+          ) : (
+            <ul style="line-height: 2; color: #333;">
+              <li>✅ Recibirás un email de confirmación de MercadoPago</li>
+              <li>📱 En los próximos minutos nos comunicaremos con usted por WhatsApp para avisarle la confirmación de su pedido.</li>
+              <li>📦 Te contactaremos pronto para coordinar el envío</li>
+              <li>📞 Si tienes dudas, puedes contactarnos por WhatsApp</li>
+            </ul>
+          )}
 
           <div style="margin-top: 2rem; text-align: center;">
             <a href="/" class="btn btn-primary" style="display: inline-block; padding: 1rem 2rem; background: #007bff; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;">
@@ -38,17 +62,22 @@ import Breadcrumb from '../../components/Breadcrumb.astro';
     </section>
   </div>
 
-  <script is:inline>
-    // Limpiar carrito después de pago exitoso
-    if (typeof window.saveCarrito !== 'undefined') {
-      window.saveCarrito([]);
-      if (typeof window.updateCartCount !== 'undefined') {
-        window.updateCartCount();
-      }
-    } else {
-      // Si cart.js no está cargado, limpiar directamente
-      localStorage.removeItem('carrito');
-    }
+      <script is:inline>
+        // Limpiar carrito después de pago exitoso
+        if (typeof window.saveCarrito !== 'undefined') {
+          window.saveCarrito([]);
+          if (typeof window.updateCartCount !== 'undefined') {
+            window.updateCartCount();
+          }
+        } else {
+          // Si cart.js no está cargado, limpiar directamente
+          localStorage.removeItem('carrito');
+        }
+        
+        // Limpiar preference_id de sessionStorage (el pago fue exitoso)
+        if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.removeItem('mp_preference_id');
+        }
   </script>
 </Layout>
 

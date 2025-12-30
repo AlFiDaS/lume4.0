@@ -11,10 +11,11 @@
     # RewriteCond %{HTTPS} off
     # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
     
-    # PRIORIDAD 1: Mapear /images/ a /public/images/ (DEBE IR PRIMERO)
-    # Las imágenes se guardan en public/images/ pero se sirven desde /images/
-    # Esta regla SIEMPRE redirige /images/ a /public/images/, incluso si existe una carpeta /images/ en la raíz
+    # PRIORIDAD 1: Mapear /images/ a /public/images/ SOLO si no existe /images/ directamente
+    # En producción, las imágenes están en /images/ directamente, así que no redirigimos
+    # En desarrollo local, las imágenes están en /public/images/, así que sí redirigimos
     RewriteCond %{REQUEST_URI} ^/images/
+    RewriteCond %{DOCUMENT_ROOT}/images !-d
     RewriteRule ^images/(.*)$ public/images/$1 [L]
     
     # PRIORIDAD 2: Archivos y directorios existentes (no hacer nada)

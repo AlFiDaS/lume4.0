@@ -24,6 +24,8 @@ $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 $scriptFile = $_SERVER['SCRIPT_FILENAME'] ?? __FILE__;
 
 // Detectar producción: si el host contiene un dominio (no localhost) o está en htdocs
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$scriptFile = $_SERVER['SCRIPT_FILENAME'] ?? __FILE__;
 $isProduction = (strpos($host, 'localhost') === false && strpos($host, '127.0.0.1') === false) ||
                 (strpos($scriptFile, 'htdocs') !== false && strpos($host, 'localhost') === false);
 
@@ -70,7 +72,16 @@ define('ADMIN_PATH', BASE_PATH . '/admin');
 define('ADMIN_URL', BASE_URL . '/admin');
 
 // Ruta de imágenes
-define('IMAGES_PATH', BASE_PATH . '/public/images');
+// En producción (Hostinger): las imágenes están directamente en /images/ (public_html/lumetest/images/)
+// En local: las imágenes están en /public/images/
+if ($isProduction) {
+    // En producción: usar la ruta física real donde están las imágenes
+    // En Hostinger: public_html/lumetest/images/
+    define('IMAGES_PATH', BASE_PATH . '/images');
+} else {
+    // En local: usar /public/images/
+    define('IMAGES_PATH', BASE_PATH . '/public/images');
+}
 define('IMAGES_URL', BASE_URL . '/images');
 
 // Ruta de API

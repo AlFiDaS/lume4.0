@@ -44,7 +44,9 @@ $stats = [
     'total' => fetchOne("SELECT COUNT(*) as total FROM orders", [])['total'] ?? 0,
     'approved' => fetchOne("SELECT COUNT(*) as total FROM orders WHERE status = 'approved'", [])['total'] ?? 0,
     'pending' => fetchOne("SELECT COUNT(*) as total FROM orders WHERE status = 'pending'", [])['total'] ?? 0,
+    'a_confirmar' => fetchOne("SELECT COUNT(*) as total FROM orders WHERE status = 'a_confirmar'", [])['total'] ?? 0,
     'rejected' => fetchOne("SELECT COUNT(*) as total FROM orders WHERE status = 'rejected'", [])['total'] ?? 0,
+    'finalizado' => fetchOne("SELECT COUNT(*) as total FROM orders WHERE status = 'finalizado'", [])['total'] ?? 0,
 ];
 
 require_once '../_inc/header.php';
@@ -81,7 +83,9 @@ require_once '../_inc/header.php';
 .stat-card.total .stat-value { color: #007bff; }
 .stat-card.approved .stat-value { color: #28a745; }
 .stat-card.pending .stat-value { color: #ffc107; }
+.stat-card.a_confirmar .stat-value { color: #fd7e14; }
 .stat-card.rejected .stat-value { color: #dc3545; }
+.stat-card.finalizado .stat-value { color: #6c757d; }
 
 .filters-container {
     background: white;
@@ -175,6 +179,16 @@ require_once '../_inc/header.php';
     color: #383d41;
 }
 
+.status-a_confirmar {
+    background: #ffeaa7;
+    color: #6c5700;
+}
+
+.status-finalizado {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
 .btn-view {
     background: #007bff;
     color: white;
@@ -222,12 +236,20 @@ require_once '../_inc/header.php';
             <div class="stat-value"><?= $stats['total'] ?></div>
         </div>
         <div class="stat-card approved">
-            <h3>Pagadas</h3>
+            <h3>Aprobadas</h3>
             <div class="stat-value"><?= $stats['approved'] ?></div>
+        </div>
+        <div class="stat-card a_confirmar">
+            <h3>A Confirmar</h3>
+            <div class="stat-value"><?= $stats['a_confirmar'] ?></div>
         </div>
         <div class="stat-card pending">
             <h3>Pendientes</h3>
             <div class="stat-value"><?= $stats['pending'] ?></div>
+        </div>
+        <div class="stat-card finalizado">
+            <h3>Finalizadas</h3>
+            <div class="stat-value"><?= $stats['finalizado'] ?></div>
         </div>
         <div class="stat-card rejected">
             <h3>Rechazadas</h3>
@@ -250,8 +272,10 @@ require_once '../_inc/header.php';
                 <label>Estado</label>
                 <select name="status">
                     <option value="">Todos</option>
-                    <option value="approved" <?= $filtro_status === 'approved' ? 'selected' : '' ?>>Pagadas</option>
+                    <option value="a_confirmar" <?= $filtro_status === 'a_confirmar' ? 'selected' : '' ?>>A Confirmar</option>
+                    <option value="approved" <?= $filtro_status === 'approved' ? 'selected' : '' ?>>Aprobadas</option>
                     <option value="pending" <?= $filtro_status === 'pending' ? 'selected' : '' ?>>Pendientes</option>
+                    <option value="finalizado" <?= $filtro_status === 'finalizado' ? 'selected' : '' ?>>Finalizadas</option>
                     <option value="rejected" <?= $filtro_status === 'rejected' ? 'selected' : '' ?>>Rechazadas</option>
                     <option value="cancelled" <?= $filtro_status === 'cancelled' ? 'selected' : '' ?>>Canceladas</option>
                 </select>
@@ -294,8 +318,10 @@ require_once '../_inc/header.php';
                         $items = json_decode($orden['items'] ?? '[]', true);
                         $statusClass = 'status-' . ($orden['status'] ?? 'pending');
                         $statusLabels = [
-                            'approved' => 'Pagada',
+                            'a_confirmar' => 'A Confirmar',
+                            'approved' => 'Aprobada',
                             'pending' => 'Pendiente',
+                            'finalizado' => 'Finalizada',
                             'rejected' => 'Rechazada',
                             'cancelled' => 'Cancelada'
                         ];
