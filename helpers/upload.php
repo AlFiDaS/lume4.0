@@ -440,3 +440,41 @@ function deleteGaleriaImage($imagePath) {
     return true; // Si no existe, considerarlo como éxito
 }
 
+/**
+ * Eliminar imagen de comprobante de pago
+ * @param string $proofImagePath (ruta relativa desde raíz, ej: '/images/proofs/order_123_1234567890.jpg')
+ * @return bool
+ */
+function deleteProofImage($proofImagePath) {
+    if (empty($proofImagePath)) {
+        return true; // No hay imagen que eliminar
+    }
+    
+    // Verificar que la ruta es de comprobantes
+    if (strpos($proofImagePath, '/images/proofs/') !== 0) {
+        return false; // Ruta inválida
+    }
+    
+    // Remover parámetros de cache busting si existen
+    $cleanPath = preg_replace('/\?.*$/', '', $proofImagePath);
+    
+    // Construir ruta completa usando IMAGES_PATH (ya está configurado correctamente según el entorno)
+    // La ruta relativa viene como /images/proofs/... así que necesitamos construir la ruta física
+    // Remover el prefijo /images/ de la ruta relativa
+    $relativePath = preg_replace('#^/images/#', '', $cleanPath);
+    $fullPath = IMAGES_PATH . '/' . $relativePath;
+    
+    // Verificar que el archivo existe y está en el directorio de comprobantes
+    if (file_exists($fullPath)) {
+        // Verificar seguridad: asegurar que la ruta está dentro de IMAGES_PATH/proofs/
+        $realPath = realpath($fullPath);
+        $imagesPathReal = realpath(IMAGES_PATH . '/proofs');
+        
+        if ($realPath && $imagesPathReal && strpos($realPath, $imagesPathReal) === 0) {
+            return @unlink($fullPath);
+        }
+    }
+    
+    return false;
+}
+

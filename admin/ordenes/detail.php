@@ -34,13 +34,94 @@ if (!$orden) {
 $items = json_decode($orden['items'] ?? '[]', true);
 $metadata = json_decode($orden['metadata'] ?? '{}', true);
 
+/**
+ * Generar mensaje de WhatsApp según el estado de la orden
+ */
+function generateWhatsAppMessage($orden, $items) {
+    $nombre = $orden['payer_name'] ?? 'Cliente';
+    $ordenId = $orden['id'];
+    $status = $orden['status'] ?? 'pending';
+    
+    if ($status === 'approved') {
+        // Mensaje para pedido aprobado
+        $mensaje = "Hola $nombre, somos Lume. Confirmamos tu pedido #$ordenId!\n\n";
+        $mensaje .= "Productos pedidos:\n";
+        
+        if (is_array($items) && count($items) > 0) {
+            foreach ($items as $item) {
+                $cantidad = intval($item['cantidad'] ?? 1);
+                $nombreProducto = $item['name'] ?? 'Producto';
+                $mensaje .= "$cantidad x $nombreProducto\n";
+            }
+        }
+        
+        $mensaje .= "\nGracias por tu compra!";
+        
+    } elseif ($status === 'a_confirmar') {
+        // Mensaje para pedido a confirmar
+        $mensaje = "Hola $nombre, somos Lume, queríamos avisarte que tuvimos un error en el comprobante de pago del pedido #$ordenId.\n\n";
+        $mensaje .= "¿Podrías reenviarnos por aquí el comprobante por favor?\n\n";
+        $mensaje .= "Muchas gracias.";
+        
+    } elseif ($status === 'rejected') {
+        // Mensaje para pedido rechazado (con espacio para motivo manual)
+        $mensaje = "Hola $nombre, somos Lume, queríamos avisarte que tu pedido #$ordenId fue rechazado por ";
+        // Dejar espacio para que el usuario escriba el motivo manualmente
+        
+    } else {
+        // Mensaje genérico para otros estados
+        $mensaje = "Hola $nombre, somos Lume. Te contactamos respecto a tu pedido #$ordenId.";
+    }
+    
+    return $mensaje;
+}
+
+/**
+ * Formatear número de teléfono para WhatsApp
+ * Remueve espacios, guiones, paréntesis y agrega código de país si no lo tiene
+ */
+function formatPhoneForWhatsApp($phone) {
+    if (empty($phone)) {
+        return null;
+    }
+    
+    // Remover caracteres no numéricos excepto +
+    $phone = preg_replace('/[^0-9+]/', '', $phone);
+    
+    // Si no empieza con +, asumir que es de Argentina (+54)
+    if (substr($phone, 0, 1) !== '+') {
+        // Si empieza con 54, agregar +
+        if (substr($phone, 0, 2) === '54') {
+            $phone = '+' . $phone;
+        } else {
+            // Si empieza con 0, removerlo y agregar +54
+            if (substr($phone, 0, 1) === '0') {
+                $phone = '+54' . substr($phone, 1);
+            } else {
+                // Agregar +54 al inicio
+                $phone = '+54' . $phone;
+            }
+        }
+    }
+    
+    // Remover el + para el enlace de WhatsApp (wa.me usa solo números)
+    $phone = str_replace('+', '', $phone);
+    
+    return $phone;
+}
+
+// Generar mensaje y número de WhatsApp
+$whatsappMessage = generateWhatsAppMessage($orden, $items);
+$whatsappPhone = formatPhoneForWhatsApp($orden['payer_phone'] ?? '');
+$whatsappUrl = $whatsappPhone ? 'https://wa.me/' . $whatsappPhone . '?text=' . urlencode($whatsappMessage) : null;
+
 $statusLabels = [
+    'pending' => 'Pendiente',
     'a_confirmar' => 'A Confirmar',
     'approved' => 'Aprobada',
-    'pending' => 'Pendiente',
-    'finalizado' => 'Finalizada',
     'rejected' => 'Rechazada',
-    'cancelled' => 'Cancelada'
+    'cancelled' => 'Cancelada',
+    'finalizado' => 'Finalizada'
 ];
 $statusLabel = $statusLabels[$orden['status'] ?? 'pending'] ?? 'Desconocido';
 
@@ -181,6 +262,14 @@ require_once '../_inc/header.php';
     background: #c82333;
 }
 
+.btn-whatsapp:hover {
+    background: #20BA5A;
+}
+
+.btn-whatsapp:active {
+    background: #1A9D4A;
+}
+
 @media (max-width: 968px) {
     .orden-detail {
         grid-template-columns: 1fr;
@@ -285,6 +374,24 @@ require_once '../_inc/header.php';
                     <span class="detail-label">Teléfono:</span>
                     <span class="detail-value"><?= htmlspecialchars($orden['payer_phone']) ?></span>
                 </div>
+                <?php if ($whatsappUrl): ?>
+                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #f0f0f0;">
+                    <a href="<?= $whatsappUrl ?>" 
+                       target="_blank" 
+                       class="btn-whatsapp"
+                       style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: #25D366; color: white; text-decoration: none; border-radius: 8px; font-weight: 500; transition: background 0.2s;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink: 0;">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                        </svg>
+                        Contactar al cliente
+                    </a>
+                    <?php if ($orden['status'] === 'rejected'): ?>
+                    <p style="margin-top: 0.5rem; font-size: 0.75rem; color: #856404;">
+                        ⚠️ El mensaje incluye espacio para que escribas el motivo del rechazo manualmente.
+                    </p>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
                 <?php endif; ?>
                 <?php if ($orden['payer_document']): ?>
                 <div class="detail-row">
@@ -328,12 +435,12 @@ require_once '../_inc/header.php';
                     <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                         <label for="status" style="font-weight: 500;">Cambiar estado:</label>
                         <select name="status" id="status" style="flex: 1; min-width: 150px; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                            <option value="pending" <?= $orden['status'] === 'pending' ? 'selected' : '' ?>>Pendiente</option>
                             <option value="a_confirmar" <?= $orden['status'] === 'a_confirmar' ? 'selected' : '' ?>>A Confirmar</option>
                             <option value="approved" <?= $orden['status'] === 'approved' ? 'selected' : '' ?>>Aprobada</option>
-                            <option value="pending" <?= $orden['status'] === 'pending' ? 'selected' : '' ?>>Pendiente</option>
-                            <option value="finalizado" <?= $orden['status'] === 'finalizado' ? 'selected' : '' ?>>Finalizada</option>
                             <option value="rejected" <?= $orden['status'] === 'rejected' ? 'selected' : '' ?>>Rechazada</option>
                             <option value="cancelled" <?= $orden['status'] === 'cancelled' ? 'selected' : '' ?>>Cancelada</option>
+                            <option value="finalizado" <?= $orden['status'] === 'finalizado' ? 'selected' : '' ?>>Finalizada</option>
                         </select>
                         <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
                             Actualizar

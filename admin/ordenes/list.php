@@ -272,12 +272,12 @@ require_once '../_inc/header.php';
                 <label>Estado</label>
                 <select name="status">
                     <option value="">Todos</option>
+                    <option value="pending" <?= $filtro_status === 'pending' ? 'selected' : '' ?>>Pendientes</option>
                     <option value="a_confirmar" <?= $filtro_status === 'a_confirmar' ? 'selected' : '' ?>>A Confirmar</option>
                     <option value="approved" <?= $filtro_status === 'approved' ? 'selected' : '' ?>>Aprobadas</option>
-                    <option value="pending" <?= $filtro_status === 'pending' ? 'selected' : '' ?>>Pendientes</option>
-                    <option value="finalizado" <?= $filtro_status === 'finalizado' ? 'selected' : '' ?>>Finalizadas</option>
                     <option value="rejected" <?= $filtro_status === 'rejected' ? 'selected' : '' ?>>Rechazadas</option>
                     <option value="cancelled" <?= $filtro_status === 'cancelled' ? 'selected' : '' ?>>Canceladas</option>
+                    <option value="finalizado" <?= $filtro_status === 'finalizado' ? 'selected' : '' ?>>Finalizadas</option>
                 </select>
             </div>
             
@@ -318,12 +318,12 @@ require_once '../_inc/header.php';
                         $items = json_decode($orden['items'] ?? '[]', true);
                         $statusClass = 'status-' . ($orden['status'] ?? 'pending');
                         $statusLabels = [
+                            'pending' => 'Pendiente',
                             'a_confirmar' => 'A Confirmar',
                             'approved' => 'Aprobada',
-                            'pending' => 'Pendiente',
-                            'finalizado' => 'Finalizada',
                             'rejected' => 'Rechazada',
-                            'cancelled' => 'Cancelada'
+                            'cancelled' => 'Cancelada',
+                            'finalizado' => 'Finalizada'
                         ];
                         $statusLabel = $statusLabels[$orden['status'] ?? 'pending'] ?? 'Desconocido';
                         ?>

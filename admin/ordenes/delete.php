@@ -31,10 +31,7 @@ if (!$orden) {
 
 // Si existe comprobante, eliminarlo
 if (!empty($orden['proof_image'])) {
-    $proofPath = BASE_PATH . '/public' . $orden['proof_image'];
-    if (file_exists($proofPath)) {
-        @unlink($proofPath);
-    }
+    deleteProofImage($orden['proof_image']);
 }
 
 // Eliminar orden de BD
