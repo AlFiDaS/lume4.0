@@ -1,6 +1,9 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import Breadcrumb from '../../components/Breadcrumb.astro';
+
+// Obtener order_id de la URL (si está disponible)
+const orderId = Astro.url.searchParams.get('order_id');
 ---
 
 <Layout>
@@ -21,6 +24,19 @@ import Breadcrumb from '../../components/Breadcrumb.astro';
         </div>
 
         <div style="max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 2rem; border-radius: 8px;">
+          <div data-order-id-placeholder>
+            {orderId && (
+              <div style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                <h3 style="margin: 0 0 0.5rem 0; color: #721c24; font-size: 1rem;">📋 Información del Pedido</h3>
+                <p style="margin: 0; color: #333; font-size: 0.95rem;">
+                  <strong>ID del Pedido: #{orderId}</strong>
+                </p>
+                <p style="margin: 0.5rem 0 0 0; color: #666; font-size: 0.85rem;">
+                  Si tienes dudas sobre este pedido, menciona este número al contactarnos.
+                </p>
+              </div>
+            )}
+          </div>
           <h2 style="margin-bottom: 1rem;">¿Qué puedes hacer?</h2>
           <ul style="line-height: 2; color: #333;">
             <li>🔄 Intentar nuevamente el pago</li>
@@ -54,8 +70,35 @@ import Breadcrumb from '../../components/Breadcrumb.astro';
         preferenceId = sessionStorage.getItem('mp_preference_id');
       }
 
-      // Si tenemos preference_id, cancelar la orden
+      // Si tenemos preference_id, cancelar la orden y obtener order_id
       if (preferenceId) {
+        // Primero obtener el order_id antes de cancelar
+        fetch(`/api/orders/get-order-id.php?preference_id=${encodeURIComponent(preferenceId)}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.success && data.order_id) {
+              // Mostrar el order_id en la página
+              const orderInfoDiv = document.querySelector('[data-order-id-placeholder]');
+              if (orderInfoDiv && !orderInfoDiv.querySelector('.order-id-info')) {
+                orderInfoDiv.innerHTML = `
+                  <div class="order-id-info" style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                    <h3 style="margin: 0 0 0.5rem 0; color: #721c24; font-size: 1rem;">📋 Información del Pedido</h3>
+                    <p style="margin: 0; color: #333; font-size: 0.95rem;">
+                      <strong>ID del Pedido: #${data.order_id}</strong>
+                    </p>
+                    <p style="margin: 0.5rem 0 0 0; color: #666; font-size: 0.85rem;">
+                      Si tienes dudas sobre este pedido, menciona este número al contactarnos.
+                    </p>
+                  </div>
+                `;
+              }
+            }
+          })
+          .catch(err => {
+            console.error('Error al obtener order_id:', err);
+          });
+
+        // Luego cancelar la orden
         fetch('/api/orders/cancel-order.php', {
           method: 'POST',
           headers: {

@@ -622,7 +622,8 @@ Gracias!`);
           // Limpiar carrito
           saveCarrito([]);
           // Redirigir a página de pendiente (transferencia directa requiere confirmación)
-          window.location.href = '/carrito/pendiente';
+          const orderId = data.order_id ? `?order_id=${data.order_id}` : '';
+          window.location.href = `/carrito/pendiente${orderId}`;
         } else {
           alert('Error al crear el pedido: ' + (data.error || 'Error desconocido'));
           btnFinalizarDirecta.disabled = false;

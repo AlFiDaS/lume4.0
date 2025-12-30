@@ -2,8 +2,9 @@
 import Layout from '../../layouts/Layout.astro';
 import Breadcrumb from '../../components/Breadcrumb.astro';
 
-// Obtener tipo de pago de la URL
+// Obtener tipo de pago y order_id de la URL
 const tipoPago = Astro.url.searchParams.get('tipo') || 'mercadopago';
+const orderId = Astro.url.searchParams.get('order_id');
 ---
 
 <Layout>
@@ -35,6 +36,19 @@ const tipoPago = Astro.url.searchParams.get('tipo') || 'mercadopago';
         </div>
 
         <div style="max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 2rem; border-radius: 8px;">
+          <div data-order-id-placeholder>
+            {orderId && (
+              <div style="background: #e7f3ff; border: 1px solid #b3d9ff; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                <h3 style="margin: 0 0 0.5rem 0; color: #0056b3; font-size: 1rem;">📋 Información del Pedido</h3>
+                <p style="margin: 0; color: #333; font-size: 0.95rem;">
+                  <strong>ID del Pedido: #{orderId}</strong>
+                </p>
+                <p style="margin: 0.5rem 0 0 0; color: #666; font-size: 0.85rem;">
+                  Guarda este número para consultas futuras por WhatsApp.
+                </p>
+              </div>
+            )}
+          </div>
           <h2 style="margin-bottom: 1rem;">Próximos pasos:</h2>
           {tipoPago === 'transferencia_directa' ? (
             <ul style="line-height: 2; color: #333;">
@@ -78,6 +92,41 @@ const tipoPago = Astro.url.searchParams.get('tipo') || 'mercadopago';
         if (typeof sessionStorage !== 'undefined') {
           sessionStorage.removeItem('mp_preference_id');
         }
+
+        // Si no hay order_id en la URL pero hay preference_id, intentar obtenerlo
+        (function() {
+          const urlParams = new URLSearchParams(window.location.search);
+          let currentOrderId = urlParams.get('order_id');
+          const preferenceId = urlParams.get('preference_id');
+          
+          // Si no hay order_id pero hay preference_id, intentar obtenerlo
+          if (!currentOrderId && preferenceId) {
+            fetch(`/api/orders/get-order-id.php?preference_id=${encodeURIComponent(preferenceId)}`)
+              .then(res => res.json())
+              .then(data => {
+                if (data.success && data.order_id) {
+                  // Mostrar el order_id en la página
+                  const orderInfoDiv = document.querySelector('[data-order-id-placeholder]');
+                  if (orderInfoDiv && !orderInfoDiv.querySelector('.order-id-info')) {
+                    orderInfoDiv.innerHTML = `
+                      <div class="order-id-info" style="background: #e7f3ff; border: 1px solid #b3d9ff; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                        <h3 style="margin: 0 0 0.5rem 0; color: #0056b3; font-size: 1rem;">📋 Información del Pedido</h3>
+                        <p style="margin: 0; color: #333; font-size: 0.95rem;">
+                          <strong>ID del Pedido: #${data.order_id}</strong>
+                        </p>
+                        <p style="margin: 0.5rem 0 0 0; color: #666; font-size: 0.85rem;">
+                          Guarda este número para consultas futuras por WhatsApp.
+                        </p>
+                      </div>
+                    `;
+                  }
+                }
+              })
+              .catch(err => {
+                console.error('Error al obtener order_id:', err);
+              });
+          }
+        })();
   </script>
 </Layout>
 
