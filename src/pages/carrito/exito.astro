@@ -21,6 +21,11 @@ const orderId = Astro.url.searchParams.get('order_id');
           {tipoPago === 'transferencia_directa' ? (
             <>
               <h1 style="color: #ffc107; font-size: 2.5rem; margin-bottom: 1rem;">✅ Pago a Confirmar</h1>
+              {orderId && (
+                <p style="font-size: 1.5rem; color: #333; font-weight: 600; margin-bottom: 1rem;">
+                  Pedido #{orderId}
+                </p>
+              )}
               <p style="font-size: 1.2rem; color: #666; margin-bottom: 2rem;">
                 ¡Gracias por tu pedido! Hemos recibido tu comprobante de pago y está <strong>pendiente de confirmación</strong>.
               </p>
@@ -28,6 +33,15 @@ const orderId = Astro.url.searchParams.get('order_id');
           ) : (
             <>
               <h1 style="color: #28a745; font-size: 2.5rem; margin-bottom: 1rem;">✅ Pago Exitoso</h1>
+              {orderId ? (
+                <p style="font-size: 1.5rem; color: #333; font-weight: 600; margin-bottom: 1rem;">
+                  Pedido #{orderId}
+                </p>
+              ) : (
+                <p id="order-id-display" style="font-size: 1.5rem; color: #333; font-weight: 600; margin-bottom: 1rem; display: none;">
+                  Pedido #<span id="order-id-number"></span>
+                </p>
+              )}
               <p style="font-size: 1.2rem; color: #666; margin-bottom: 2rem;">
                 ¡Gracias por tu compra! Tu pago ha sido procesado correctamente.
               </p>
@@ -93,11 +107,28 @@ const orderId = Astro.url.searchParams.get('order_id');
           sessionStorage.removeItem('mp_preference_id');
         }
 
+        // Función para mostrar el order_id en el header
+        function displayOrderIdInHeader(orderId) {
+          if (!orderId) return;
+          
+          const orderIdDisplay = document.getElementById('order-id-display');
+          const orderIdNumber = document.getElementById('order-id-number');
+          if (orderIdDisplay && orderIdNumber) {
+            orderIdNumber.textContent = orderId;
+            orderIdDisplay.style.display = 'block';
+          }
+        }
+
         // Si no hay order_id en la URL pero hay preference_id, intentar obtenerlo
         (function() {
           const urlParams = new URLSearchParams(window.location.search);
           let currentOrderId = urlParams.get('order_id');
           const preferenceId = urlParams.get('preference_id');
+          
+          // Si hay order_id en la URL, mostrarlo inmediatamente en el header
+          if (currentOrderId) {
+            displayOrderIdInHeader(currentOrderId);
+          }
           
           // Si no hay order_id pero hay preference_id, intentar obtenerlo
           if (!currentOrderId && preferenceId) {
@@ -105,7 +136,10 @@ const orderId = Astro.url.searchParams.get('order_id');
               .then(res => res.json())
               .then(data => {
                 if (data.success && data.order_id) {
-                  // Mostrar el order_id en la página
+                  // Mostrar el order_id en el header
+                  displayOrderIdInHeader(data.order_id);
+                  
+                  // También mostrar el order_id en la página (cuadro azul)
                   const orderInfoDiv = document.querySelector('[data-order-id-placeholder]');
                   if (orderInfoDiv && !orderInfoDiv.querySelector('.order-id-info')) {
                     orderInfoDiv.innerHTML = `

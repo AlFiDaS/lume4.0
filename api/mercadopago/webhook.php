@@ -31,16 +31,80 @@ function logWebhook($message) {
     @file_put_contents($logFile, "[$timestamp] $message\n", FILE_APPEND);
 }
 
+// Función para obtener todos los datos de la solicitud (para debugging)
+function logRequestData() {
+    $data = [
+        'method' => $_SERVER['REQUEST_METHOD'] ?? 'UNKNOWN',
+        'get' => $_GET,
+        'post' => $_POST,
+        'body' => file_get_contents('php://input'),
+        'headers' => getallheaders()
+    ];
+    logWebhook("Request completa: " . json_encode($data, JSON_PRETTY_PRINT));
+}
+
 try {
-    // MercadoPago envía datos via POST con parámetro 'data'
-    $type = $_GET['type'] ?? '';
-    $dataId = $_GET['data.id'] ?? '';
+    // Log de la solicitud completa para debugging
+    logRequestData();
+    
+    // MercadoPago puede enviar notificaciones de diferentes formas:
+    // 1. Como parámetros GET: ?type=payment&data.id=123456
+    // 2. Como datos POST en el body (JSON)
+    // 3. Como headers específicos
+    
+    $type = '';
+    $dataId = '';
+    
+    // Intentar obtener desde GET (método tradicional de MercadoPago IPN)
+    if (isset($_GET['type']) && isset($_GET['data.id'])) {
+        $type = $_GET['type'];
+        $dataId = $_GET['data.id'];
+    }
+    // Intentar obtener desde POST (método moderno)
+    elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $input = file_get_contents('php://input');
+        $postData = json_decode($input, true);
+        
+        if ($postData) {
+            $type = $postData['type'] ?? $postData['action'] ?? '';
+            $dataId = $postData['data']['id'] ?? $postData['data_id'] ?? $postData['id'] ?? '';
+        } else {
+            // Intentar desde $_POST
+            $type = $_POST['type'] ?? '';
+            $dataId = $_POST['data.id'] ?? $_POST['data_id'] ?? '';
+        }
+    }
+    
+    logWebhook("Webhook recibido - Type: $type, Data ID: $dataId, Method: " . ($_SERVER['REQUEST_METHOD'] ?? 'UNKNOWN'));
 
-    logWebhook("Webhook recibido - Type: $type, Data ID: $dataId");
-
+    // Si no hay parámetros, puede ser una prueba manual o acceso directo
     if (empty($type) || empty($dataId)) {
+        // Si es un GET sin parámetros, responder con información útil
+        if ($_SERVER['REQUEST_METHOD'] === 'GET' && empty($_GET)) {
+            http_response_code(200);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'status' => 'webhook_activo',
+                'message' => 'El webhook está funcionando. MercadoPago enviará notificaciones aquí cuando haya cambios en los pagos.',
+                'endpoint' => 'api/mercadopago/webhook.php',
+                'nota' => 'Esta es una respuesta de prueba. Las notificaciones reales de MercadoPago incluirán parámetros type y data.id'
+            ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            exit;
+        }
+        
+        // Si es POST pero sin datos válidos, registrar y responder
+        logWebhook("Advertencia: Solicitud sin parámetros válidos");
         http_response_code(400);
-        echo json_encode(['error' => 'Parámetros inválidos']);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'error' => 'Parámetros inválidos',
+            'message' => 'Se esperan parámetros type y data.id',
+            'received' => [
+                'get' => $_GET,
+                'post' => $_POST,
+                'body' => file_get_contents('php://input')
+            ]
+        ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
         exit;
     }
 
@@ -63,16 +127,24 @@ try {
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
         curl_close($ch);
+
+        if ($curlError) {
+            throw new Exception('Error de cURL: ' . $curlError);
+        }
 
         if ($httpCode === 200) {
             $payment = json_decode($response, true);
             
-            logWebhook("Pago procesado - ID: " . $payment['id'] . ", Status: " . $payment['status']);
+            if (!$payment) {
+                throw new Exception('Respuesta inválida de MercadoPago API');
+            }
             
-            // Buscar orden por external_reference o preference_id
+            logWebhook("Pago procesado - ID: " . ($payment['id'] ?? 'N/A') . ", Status: " . ($payment['status'] ?? 'N/A'));
+            
+            // Buscar orden por external_reference
             $externalRef = $payment['external_reference'] ?? null;
-            $preferenceId = $payment['payment_method_id'] ?? null; // Esto puede variar según la respuesta
             
             // Si tenemos external_reference, buscar la orden
             if ($externalRef) {
@@ -103,17 +175,30 @@ try {
                 } else {
                     logWebhook("Orden no encontrada para external_reference: " . $externalRef);
                 }
+            } else {
+                logWebhook("Pago sin external_reference: " . ($payment['id'] ?? 'N/A'));
             }
+        } else {
+            logWebhook("Error al obtener pago de MercadoPago API - HTTP Code: $httpCode, Response: $response");
+            throw new Exception("Error al obtener información del pago (HTTP $httpCode)");
         }
+    } else {
+        logWebhook("Tipo de notificación no manejado: $type");
     }
 
     // Responder a MercadoPago
     http_response_code(200);
+    header('Content-Type: application/json; charset=utf-8');
     echo json_encode(['status' => 'ok']);
 
 } catch (Exception $e) {
     logWebhook("Error: " . $e->getMessage());
+    logWebhook("Stack trace: " . $e->getTraceAsString());
     http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode([
+        'error' => $e->getMessage(),
+        'status' => 'error'
+    ], JSON_UNESCAPED_UNICODE);
 }
 
