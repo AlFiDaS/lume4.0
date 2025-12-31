@@ -61,37 +61,6 @@ import Breadcrumb from '../components/Breadcrumb.astro';
                 </div>
 
                 <div class="form-group">
-                  <label for="pago">Forma de pago</label>
-                  <select id="pago">
-                    <option value="tarjeta" selected>MercadoPago - Hasta en 3 cuotas sin interés</option>
-                    <option value="transferencia_directa">Transferencia (-25%)</option>
-                  </select>
-                </div>
-                
-                <!-- Datos bancarios (solo se muestra si es transferencia directa) -->
-                <div id="datos-bancarios" class="datos-bancarios" style="display: none;">
-                  <div class="form-group">
-                    <label>Datos para transferencia:</label>
-                    <div class="datos-transferencia">
-                      <p><strong>Alias:</strong> <span>lume.co.mp</span></p>
-                      <p><strong>Titular:</strong> <span>Gisela Gabriela Guerra</span></p>
-                      <p><strong>Total a transferir:</strong> <span id="total-transferir">$0</span></p>
-                    </div>
-                  </div>
-                  <div class="form-group">
-                    <label for="proof_image">Comprobante de pago *</label>
-                    <input type="file" id="proof_image" accept="image/jpeg,image/png,image/webp" style="display: none;" />
-                    <small>Sube una imagen del comprobante de transferencia (JPG, PNG o WEBP - máx. 5MB)</small>
-                    <button type="button" id="btn-subir-comprobante" class="btn-subir-comprobante">
-                      📎 Subir comprobante de pago
-                    </button>
-                    <div id="proof-preview" style="display: none; margin-top: 0.5rem;">
-                      <img id="proof-preview-img" src="" alt="Vista previa" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 1px solid #ddd;" />
-                    </div>
-                  </div>
-                </div>
-
-                <div class="form-group">
                   <label for="envio">Tipo de envío *</label>
                   <select id="envio" required>
                     <option value="Corrientes Envio a Domicilio">Envío a Domicilio - Corrientes, Capital</option>
@@ -134,6 +103,41 @@ import Breadcrumb from '../components/Breadcrumb.astro';
                 <div class="form-group" id="label-observaciones" style="display: none;">
                   <label for="observaciones">Observaciones</label>
                   <textarea id="observaciones" rows="2"></textarea>
+                </div>
+
+                <div class="form-group">
+                  <label for="pago">Forma de pago</label>
+                  <select id="pago">
+                    <option value="tarjeta" selected>MercadoPago - Hasta en 3 cuotas sin interés</option>
+                    <option value="transferencia_directa">Transferencia (-25%)</option>
+                  </select>
+                </div>
+                
+                <!-- Datos bancarios (solo se muestra si es transferencia directa) -->
+                <div id="datos-bancarios" class="datos-bancarios" style="display: none;">
+                  <div class="form-group">
+                    <label>Datos para transferencia:</label>
+                    <div class="datos-transferencia">
+                      <p><strong>Alias:</strong> <span>lume.co.mp</span></p>
+                      <p><strong>Titular:</strong> <span>Gisela Gabriela Guerra</span></p>
+                      <p><strong>Total a transferir:</strong> <span id="total-transferir">$0</span></p>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="proof_image">Comprobante de pago *</label>
+                    <input type="file" id="proof_image" accept="image/jpeg,image/png,image/webp" style="display: none;" />
+                    <small>Sube una imagen del comprobante de transferencia (JPG, PNG o WEBP - máx. 5MB)</small>
+                    <button type="button" id="btn-subir-comprobante" class="btn-subir-comprobante">
+                      📎 Subir comprobante de pago
+                    </button>
+                    <div id="proof-preview" style="display: none; margin-top: 0.5rem;">
+                      <img id="proof-preview-img" src="" alt="Vista previa" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 1px solid #ddd;" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="total-a-pagar">
+                  <strong>Total a pagar: <span id="total-a-pagar-display">$0</span></strong>
                 </div>
 
                 <button id="btn-finalizar" class="btn-finalizar" type="button">
@@ -221,6 +225,10 @@ import Breadcrumb from '../components/Breadcrumb.astro';
         totalEl.textContent = "$0";
         carritoTotalEl.textContent = "$0";
         envioInfoEl.textContent = "-";
+        const totalAPagarDisplay = document.getElementById('total-a-pagar-display');
+        if (totalAPagarDisplay) {
+          totalAPagarDisplay.textContent = "$0";
+        }
         if (finalizarBtn) finalizarBtn.style.display = "none";
         if (vaciarBtn) vaciarBtn.style.display = "none";
         return;
@@ -322,6 +330,12 @@ import Breadcrumb from '../components/Breadcrumb.astro';
         : `$${subtotalCalculado.toLocaleString('es-AR')}`;
       envioInfoEl.textContent = isTransferenciaDirecta ? `$${envioCalculado.toLocaleString('es-AR')} (-25%)` : envioTexto;
       totalEl.textContent = `$${totalFinal.toLocaleString('es-AR')}`;
+      
+      // Actualizar "Total a pagar" antes del botón
+      const totalAPagarDisplay = document.getElementById('total-a-pagar-display');
+      if (totalAPagarDisplay) {
+        totalAPagarDisplay.textContent = `$${totalFinal.toLocaleString('es-AR')}`;
+      }
       
       // Mostrar/ocultar datos bancarios y botones según método de pago
       const datosBancarios = document.getElementById('datos-bancarios');

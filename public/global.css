@@ -1016,6 +1016,28 @@ img {
   margin-top: 2px;
 }
 
+.total-a-pagar {
+  margin: 1.5rem 0 1rem 0;
+  padding: 1rem;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-radius: 8px;
+  text-align: center;
+  font-size: 1.1rem;
+  color: #333;
+  border: 2px solid #e0a4ce;
+}
+
+.total-a-pagar strong {
+  color: #333;
+  font-weight: 600;
+}
+
+.total-a-pagar span {
+  color: #e0a4ce;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
 .btn-finalizar {
   display: inline-flex;
   align-items: flex-start;
@@ -1440,6 +1462,16 @@ img {
   .btn-finalizar-directa {
     padding: 0.875rem 1rem;
     font-size: 0.9rem;
+  }
+
+  .total-a-pagar {
+    margin: 1rem 0 0.75rem 0;
+    padding: 0.75rem;
+    font-size: 1rem;
+  }
+
+  .total-a-pagar span {
+    font-size: 1.1rem;
   }
 }
 
