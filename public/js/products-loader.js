@@ -81,15 +81,27 @@
     }
     
     /**
-     * Calcular precio con tarjeta (25% más)
+     * Calcular precio con tarjeta (25% más, redondeado al 100 más cercano)
      * @param {string} priceString - Precio como string (ej: "$15900")
-     * @returns {string} Precio con tarjeta formateado (ej: "$19875")
+     * @returns {string} Precio con tarjeta formateado (ej: "$19900")
      */
     function calculateCardPrice(priceString) {
         const basePrice = extractPriceValue(priceString);
         if (basePrice === 0) return '';
-        const cardPrice = Math.round(basePrice * 1.25);
+        const cardPrice = Math.round((basePrice * 1.25) / 100) * 100;
         return '$' + cardPrice.toLocaleString('es-AR');
+    }
+    
+    /**
+     * Calcular precio de transferencia (25% menos = 80% del precio de tarjeta)
+     * @param {string} priceString - Precio de tarjeta como string (ej: "$19875")
+     * @returns {string} Precio de transferencia formateado (ej: "$15900")
+     */
+    function calculateTransferPrice(priceString) {
+        const cardPrice = extractPriceValue(priceString);
+        if (cardPrice === 0) return '';
+        const transferPrice = Math.round(cardPrice * 0.8);
+        return '$' + transferPrice.toLocaleString('es-AR');
     }
     
     /**
@@ -114,16 +126,24 @@
             `onmouseover="this.src='${escapeHtml(hoverImage)}'" onmouseout="this.src='${escapeHtml(imageSrc)}'"` : 
             '';
         
-        // Calcular precio de tarjeta
+        // El precio que viene de la BD es de transferencia
+        // Calcular precio de tarjeta para mostrar (principal) y precio de transferencia (secundario)
         const cardPrice = calculateCardPrice(product.price);
+        // Formatear precio de transferencia (extraer número y formatear con separadores de miles)
+        let transferPriceFormatted = '';
+        if (product.price) {
+            const transferPriceValue = extractPriceValue(product.price);
+            if (transferPriceValue > 0) {
+                transferPriceFormatted = '$' + transferPriceValue.toLocaleString('es-AR');
+            }
+        }
         const priceHtml = product.price ? `
             <div class="price-container">
-                <p class="price-label">Efectivo / transferencia:</p>
-                <p class="price">${escapeHtml(product.price)}</p>
-                ${cardPrice ? `
+                ${cardPrice ? `<p class="price">${escapeHtml(cardPrice)}</p>` : ''}
+                <p class="price-card-text">hasta en 3 cuotas</p>
+                ${transferPriceFormatted ? `
                     <p class="price-card">
-                        <span class="price-label">Tarjeta:</span> ${escapeHtml(cardPrice)}
-                        <span class="price-card-text">hasta en 3 cuotas</span>
+                        <span class="price-label">Transferencia (-25%):</span> ${escapeHtml(transferPriceFormatted)}
                     </p>
                 ` : ''}
             </div>

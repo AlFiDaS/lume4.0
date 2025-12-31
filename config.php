@@ -115,7 +115,7 @@ define('UPLOAD_EXTENSIONS', ['jpg', 'jpeg', 'png', 'webp']);
 // Obtén tus credenciales desde: https://www.mercadopago.com.ar/developers/panel
 // Para pruebas, usa las credenciales de TEST (sandbox)
 // Para producción, usa las credenciales de PRODUCCIÓN
-define('MERCADOPAGO_ACCESS_TOKEN', 'APP_USR-6297872696175949-122918-2fa9c4b458b91df8a2ca55c7111ec21d-3100673569');
+define('MERCADOPAGO_ACCESS_TOKEN', 'APP_USR-4995881903914776-122918-9af395eea1c8ee41b538ebc1086fe7ea-445057287');
 // Credenciales de PRUEBA - Los pagos no serán reales, puedes usar tarjetas de prueba
 define('MERCADOPAGO_TEST_MODE', true);
 

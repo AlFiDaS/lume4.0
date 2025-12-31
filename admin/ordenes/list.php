@@ -2,7 +2,7 @@
 /**
  * Lista de órdenes/pedidos
  */
-$pageTitle = 'Órdenes';
+$pageTitle = 'Pedidos';
 require_once '../../config.php';
 require_once '../../helpers/auth.php';
 
@@ -55,29 +55,30 @@ require_once '../_inc/header.php';
 <style>
 .ordenes-stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
 }
 
 .stat-card {
     background: white;
-    padding: 1.5rem;
+    padding: 0.875rem 1rem;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .stat-card h3 {
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 0.25rem 0;
     color: #666;
-    font-size: 0.9rem;
+    font-size: 0.75rem;
     font-weight: normal;
 }
 
 .stat-card .stat-value {
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: bold;
     color: #333;
+    line-height: 1.2;
 }
 
 .stat-card.total .stat-value { color: #007bff; }
@@ -145,6 +146,25 @@ require_once '../_inc/header.php';
 .ordenes-table td {
     padding: 1rem;
     border-bottom: 1px solid #dee2e6;
+    display: table-cell;
+}
+
+/* Asegurar que en desktop todo se muestre como tabla normal */
+.ordenes-table tbody td {
+    display: table-cell;
+}
+
+/* Asegurar que en desktop no se muestren los :after */
+.ordenes-table tbody td[data-label="ID"]:after,
+.ordenes-table tbody td[data-label="Cliente"]:after,
+.ordenes-table tbody td[data-label="Total"]:after {
+    display: none !important;
+    content: none;
+}
+
+/* Asegurar que Estado se muestre en desktop */
+.ordenes-table tbody td[data-label="Estado"] {
+    display: table-cell;
 }
 
 .ordenes-table tr:hover {
@@ -212,21 +232,265 @@ require_once '../_inc/header.php';
 @media (max-width: 768px) {
     .ordenes-stats {
         grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
     }
     
+    .stat-card {
+        padding: 0.75rem;
+    }
+    
+    .stat-card .stat-value {
+        font-size: 1.25rem;
+    }
+    
+    .stat-card h3 {
+        font-size: 0.7rem;
+    }
+    
+    .filters-container {
+        padding: 1rem;
+    }
+    
+    .filters-form {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .filters-form .form-group {
+        min-width: 100%;
+    }
+    
+    .filters-form .form-group:last-child {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .filters-form .form-group:last-child button,
+    .filters-form .form-group:last-child a {
+        flex: 1;
+    }
+    
+    /* Convertir tabla en cards en mobile */
     .ordenes-table {
-        overflow-x: auto;
+        overflow: visible;
     }
     
-    .ordenes-table table {
-        min-width: 800px;
+    .ordenes-table table,
+    .ordenes-table thead,
+    .ordenes-table tbody,
+    .ordenes-table tr {
+        display: block;
+        width: 100%;
+    }
+    
+    .ordenes-table thead {
+        display: none;
+    }
+    
+    /* Ocultar Fecha y Teléfono en mobile ya que se muestran en ID y Cliente */
+    .ordenes-table tbody td[data-label="Fecha"],
+    .ordenes-table tbody td[data-label="Teléfono"] {
+        display: none;
+    }
+    
+    .ordenes-table tbody tr {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        margin-bottom: 0.5rem;
+        padding: 0.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    
+    .ordenes-table tbody td {
+        display: block;
+        padding: 0.15rem 0;
+        border: none;
+        text-align: left;
+        font-size: 0.8rem;
+    }
+    
+    .ordenes-table tbody td:before {
+        display: none;
+    }
+    
+    /* Layout compacto horizontal - solo en mobile */
+    .ordenes-table tbody td[data-label="ID"] {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0;
+        margin-bottom: 0.2rem;
+        font-size: 0.95rem;
+        font-weight: bold;
+        border: none;
+    }
+    
+    .ordenes-table tbody td[data-label="ID"]:after {
+        content: attr(data-fecha);
+        font-weight: normal;
+        font-size: 0.8rem;
+        color: #666;
+    }
+    
+    .ordenes-table tbody td[data-label="Cliente"] {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0;
+        margin-bottom: 0.2rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    .ordenes-table tbody td[data-label="Cliente"]:after {
+        content: attr(data-telefono);
+        font-weight: normal;
+        font-size: 0.8rem;
+        color: #666;
+    }
+    
+    .ordenes-table tbody td[data-label="Productos"] {
+        padding: 0;
+        margin-bottom: 0.2rem;
+        font-size: 0.8rem;
+        color: #666;
+    }
+    
+    .ordenes-table tbody td[data-label="Total"] {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0;
+        margin-bottom: 0.2rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+    
+    .ordenes-table tbody td[data-label="Estado"] {
+        display: none;
+    }
+    
+    .ordenes-table tbody td[data-label="Total"]:after {
+        content: attr(data-estado);
+        font-weight: normal;
+        display: inline-block !important;
+        padding: 0.2rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        margin-left: 0.5rem;
+    }
+    
+    /* Mostrar los :after solo en mobile */
+    .ordenes-table tbody td[data-label="ID"]:after,
+    .ordenes-table tbody td[data-label="Cliente"]:after {
+        display: block !important;
+    }
+    
+    /* Colores para los estados en el after basados en data-status-class */
+    .ordenes-table tbody td[data-status-class="status-approved"]:after {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .ordenes-table tbody td[data-status-class="status-pending"]:after {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .ordenes-table tbody td[data-status-class="status-rejected"]:after {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .ordenes-table tbody td[data-status-class="status-cancelled"]:after {
+        background: #e2e3e5;
+        color: #383d41;
+    }
+    
+    .ordenes-table tbody td[data-status-class="status-a_confirmar"]:after {
+        background: #ffeaa7;
+        color: #6c5700;
+    }
+    
+    .ordenes-table tbody td[data-status-class="status-finalizado"]:after {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+    
+    .ordenes-table tbody td[data-label="Acciones"] {
+        padding: 0;
+        margin-top: 0.3rem;
+        text-align: center;
+    }
+    
+    .btn-view {
+        width: auto;
+        min-width: 120px;
+        text-align: center;
+        padding: 0.35rem 0.75rem;
+        font-size: 0.8rem;
+        display: inline-block;
+    }
+}
+
+@media (max-width: 480px) {
+    .ordenes-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+    }
+    
+    .stat-card {
+        padding: 0.625rem;
+    }
+    
+    .stat-card .stat-value {
+        font-size: 1.1rem;
+    }
+    
+    .stat-card h3 {
+        font-size: 0.65rem;
+    }
+    
+    .ordenes-table tbody tr {
+        padding: 0.5rem;
+        margin-bottom: 0.375rem;
+    }
+    
+    .ordenes-table tbody td {
+        padding: 0.2rem 0;
+        font-size: 0.8rem;
+    }
+    
+    .ordenes-table tbody td:before {
+        font-size: 0.7rem;
+    }
+    
+    .ordenes-table tbody td[data-label="ID"] {
+        font-size: 0.95rem;
+        margin-bottom: 0.2rem;
+        padding-bottom: 0.3rem;
+    }
+    
+    .ordenes-table tbody td[data-label="Acciones"] {
+        margin-top: 0.3rem;
+        padding-top: 0.3rem;
+    }
+    
+    .btn-view {
+        padding: 0.4rem;
+        font-size: 0.8rem;
+    }
+    
+    .admin-content h2 {
+        font-size: 1.5rem;
     }
 }
 </style>
 
 <div class="admin-content">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-        <h2>Órdenes y Pedidos</h2>
+        <h2>Pedidos</h2>
     </div>
 
     <!-- Estadísticas -->
@@ -328,25 +592,22 @@ require_once '../_inc/header.php';
                         $statusLabel = $statusLabels[$orden['status'] ?? 'pending'] ?? 'Desconocido';
                         ?>
                         <tr>
-                            <td>
+                            <td data-label="ID" data-fecha="<?= date('d/m/Y H:i', strtotime($orden['created_at'])) ?>">
                                 <strong>#<?= htmlspecialchars($orden['id']) ?></strong>
-                                <?php if ($orden['mercadopago_id']): ?>
-                                    <br><small style="color: #666;">MP: <?= htmlspecialchars(substr($orden['mercadopago_id'], 0, 10)) ?>...</small>
-                                <?php endif; ?>
                             </td>
-                            <td>
+                            <td data-label="Fecha">
                                 <?= date('d/m/Y H:i', strtotime($orden['created_at'])) ?>
                             </td>
-                            <td>
+                            <td data-label="Cliente" data-telefono="<?= htmlspecialchars($orden['payer_phone'] ?? '-') ?>">
                                 <strong><?= htmlspecialchars($orden['payer_name'] ?? 'N/A') ?></strong>
                                 <?php if ($orden['payer_email']): ?>
                                     <br><small style="color: #666;"><?= htmlspecialchars($orden['payer_email']) ?></small>
                                 <?php endif; ?>
                             </td>
-                            <td>
+                            <td data-label="Teléfono">
                                 <?= htmlspecialchars($orden['payer_phone'] ?? '-') ?>
                             </td>
-                            <td class="items-preview">
+                            <td data-label="Productos" class="items-preview">
                                 <?php if (is_array($items) && count($items) > 0): ?>
                                     <?php 
                                     $itemsText = array_map(function($item) {
@@ -361,15 +622,15 @@ require_once '../_inc/header.php';
                                     -
                                 <?php endif; ?>
                             </td>
-                            <td>
+                            <td data-label="Total" data-estado="<?= $statusLabel ?>" data-status-class="<?= $statusClass ?>">
                                 <strong>$<?= number_format($orden['total_amount'] ?? 0, 2, ',', '.') ?></strong>
                             </td>
-                            <td>
+                            <td data-label="Estado" class="status-cell">
                                 <span class="status-badge <?= $statusClass ?>">
                                     <?= $statusLabel ?>
                                 </span>
                             </td>
-                            <td>
+                            <td data-label="Acciones">
                                 <a href="detail.php?id=<?= $orden['id'] ?>" class="btn-view">Ver Detalle</a>
                             </td>
                         </tr>

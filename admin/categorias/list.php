@@ -28,7 +28,10 @@ require_once '../_inc/header.php';
 <div class="admin-content">
     <div class="page-header">
         <h2>Gestionar Categorías</h2>
-        <a href="add.php" class="btn btn-primary">➕ Agregar Categoría</a>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            <a href="../ordenar.php" class="btn btn-secondary">📋 Ordenar Productos</a>
+            <a href="add.php" class="btn btn-primary">➕ Agregar Categoría</a>
+        </div>
     </div>
     
     <?php if (empty($categorias)): ?>
@@ -324,6 +327,13 @@ require_once '../_inc/header.php';
     .page-header h2 {
         margin: 0;
         font-size: 1.5rem;
+    }
+    
+    .page-header > div {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        width: 100%;
     }
     
     .page-header .btn {

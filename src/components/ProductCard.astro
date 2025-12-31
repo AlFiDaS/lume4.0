@@ -16,6 +16,19 @@ const hasValidImage = image && image !== '';
 const hasValidHover = hoverImage && hoverImage !== '';
 const displayImage = hasValidImage ? image : '/images/placeholder.svg';
 const displayHover = hasValidHover ? hoverImage : displayImage;
+
+// El precio que viene de la BD es de transferencia
+// Calcular precio de tarjeta para mostrar (principal) y precio de transferencia (secundario)
+// El precio de tarjeta se redondea al 100 más cercano
+let cardPriceFormatted = null;
+let transferPriceFormatted = null;
+const priceMatch = price.match(/\$?(\d+)/);
+if (priceMatch) {
+  const transferPrice = parseInt(priceMatch[1], 10);
+  const cardPrice = Math.round((transferPrice * 1.25) / 100) * 100;
+  cardPriceFormatted = '$' + cardPrice.toLocaleString('es-AR');
+  transferPriceFormatted = '$' + transferPrice.toLocaleString('es-AR');
+}
 ---
 
 <div class="product-card">
@@ -42,29 +55,25 @@ const displayHover = hasValidHover ? hoverImage : displayImage;
     )}
   </div>
   
----
-// Calcular precio de tarjeta (25% más)
-let cardPriceFormatted = null;
-const priceMatch = price.match(/\$?(\d+)/);
-if (priceMatch) {
-  const basePrice = parseInt(priceMatch[1], 10);
-  const cardPrice = Math.round(basePrice * 1.25);
-  cardPriceFormatted = '$' + cardPrice.toLocaleString('es-AR');
-}
----
-
   <div class="info">
     <h3>{name}</h3>
     <div class="price-container">
-      <p class="price-label">Efectivo / transferencia:</p>
-      <p class="price">{price}</p>
-      {cardPriceFormatted && (
-        <p class="price-card">
-          <span class="price-label">Tarjeta:</span> {cardPriceFormatted}
-          <span class="price-card-text">hasta en 3 cuotas</span>
-        </p>
+      {cardPriceFormatted ? (
+        <>
+          <p class="price">{cardPriceFormatted}</p>
+          <p class="price-card-text">hasta en 3 cuotas</p>
+          {transferPriceFormatted && (
+            <p class="price-card">
+              <span class="price-label">Transferencia (-25%):</span> {transferPriceFormatted}
+            </p>
+          )}
+        </>
+      ) : (
+        <p class="price">N/A</p>
       )}
     </div>
+    <!-- Guardar el precio de transferencia original en el carrito (no el precio de tarjeta) -->
+    <!-- Esto permite calcular correctamente los descuentos sin errores de redondeo -->
     <button 
       class="btn-agregar" 
       onclick={`agregarAlCarrito('${name}', '${price}', '${displayImage}', '${slug}', '${categoria}')`}
@@ -300,7 +309,7 @@ if (priceMatch) {
     font-family: 'Inter', sans-serif;
   }
 
-  .price-card .price-label {
+  .product-card .info .price-card .price-label {
     font-size: 0.85rem;
     color: #666;
     margin-right: 0.25rem;
@@ -394,6 +403,14 @@ if (priceMatch) {
       font-size: 1.6rem;
     }
     
+    .product-card .info .price-card {
+      font-size: 0.7rem !important;
+    }
+    
+    .product-card .info .price-card .price-label {
+      font-size: 0.7rem !important;
+    }
+    
     .btn-agregar {
       padding: var(--space-xs) var(--space-sm);
       font-size: 0.7rem;
@@ -411,11 +428,19 @@ if (priceMatch) {
     }
     
     h3 {
-      font-size: 0.75rem;
+      font-size: 0.95rem;
     }
     
     .price {
       font-size: 1.5rem;
+    }
+    
+    .product-card .info .price-card {
+      font-size: 0.7rem !important;
+    }
+    
+    .product-card .info .price-card .price-label {
+      font-size: 0.7rem !important;
     }
     
     .btn-agregar {

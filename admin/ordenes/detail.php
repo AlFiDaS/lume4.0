@@ -273,12 +273,105 @@ require_once '../_inc/header.php';
 @media (max-width: 968px) {
     .orden-detail {
         grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .detail-section {
+        padding: 1rem;
+    }
+    
+    .detail-row {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .detail-value {
+        text-align: left;
+    }
+    
+    .items-list li {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .items-list li > div:last-child {
+        text-align: left;
+        font-weight: 600;
+    }
+    
+    .total-row {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-content h2 {
+        font-size: 1.5rem;
+    }
+    
+    .admin-content > div:first-of-type {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .detail-section {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .detail-section h3 {
+        font-size: 1.1rem;
+    }
+    
+    form[method="POST"] {
+        padding-top: 1rem;
+    }
+    
+    form[method="POST"] > div {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    form[method="POST"] select,
+    form[method="POST"] button {
+        width: 100%;
+    }
+    
+    .btn-whatsapp {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .btn-back {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .detail-section {
+        padding: 0.875rem;
+    }
+    
+    .detail-row {
+        padding: 0.5rem 0;
+    }
+    
+    .items-list li {
+        padding: 0.5rem;
+    }
+    
+    .status-badge {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.75rem;
     }
 }
 </style>
 
 <div class="admin-content">
-    <a href="list.php" class="btn-back">← Volver a Órdenes</a>
+    <a href="list.php" class="btn-back">← Volver a Pedidos</a>
     
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
         <h2>Orden #<?= htmlspecialchars($orden['id']) ?></h2>

@@ -66,15 +66,27 @@
     }
     
     /**
-     * Calcular precio con tarjeta (25% más)
+     * Calcular precio con tarjeta (25% más, redondeado al 100 más cercano)
      * @param {string} priceString - Precio como string (ej: "$15900")
-     * @returns {string} Precio con tarjeta formateado (ej: "$19875")
+     * @returns {string} Precio con tarjeta formateado (ej: "$19900")
      */
     function calculateCardPrice(priceString) {
         const basePrice = extractPriceValue(priceString);
         if (basePrice === 0) return '';
-        const cardPrice = Math.round(basePrice * 1.25);
+        const cardPrice = Math.round((basePrice * 1.25) / 100) * 100;
         return '$' + cardPrice.toLocaleString('es-AR');
+    }
+    
+    /**
+     * Calcular precio de transferencia (25% menos = 80% del precio de tarjeta)
+     * @param {string} priceString - Precio de tarjeta como string (ej: "$19875")
+     * @returns {string} Precio de transferencia formateado (ej: "$15900")
+     */
+    function calculateTransferPrice(priceString) {
+        const cardPrice = extractPriceValue(priceString);
+        if (cardPrice === 0) return '';
+        const transferPrice = Math.round(cardPrice * 0.8);
+        return '$' + transferPrice.toLocaleString('es-AR');
     }
     
     /**
@@ -95,6 +107,8 @@
         const hasValidHover = product.hoverImage && product.hoverImage.trim() !== '';
         const hoverImage = hasValidHover ? product.hoverImage : imageSrc;
         
+        // Guardar el precio de transferencia original en el carrito (no el precio de tarjeta)
+        // Esto permite calcular correctamente los descuentos sin errores de redondeo
         const stockButton = product.stock ? 
             `<button 
                 class="btn-agregar" 
@@ -163,15 +177,21 @@
                 
                 <div class="producto-price">
                     <div class="price-main-row">
-                        <span class="price">${escapeHtml(product.price || 'N/A')}</span>
-                        <div class="price-badge">Transferencia / efectivo</div>
+                        <span class="price">${escapeHtml(calculateCardPrice(product.price) || product.price || 'N/A')}</span>
+                        <div class="price-badge">hasta en 3 cuotas</div>
                     </div>
-                    ${calculateCardPrice(product.price) ? `
+                    ${(() => {
+                        if (!product.price) return '';
+                        // Formatear precio de transferencia (extraer número y formatear con separadores de miles)
+                        const transferPriceValue = extractPriceValue(product.price);
+                        const transferPriceFormatted = transferPriceValue > 0 ? '$' + transferPriceValue.toLocaleString('es-AR') : product.price;
+                        return `
                         <div class="price-card-row">
-                            <span class="price-card-label">Precio tarjeta:</span>
-                            <span class="price-card-value">${escapeHtml(calculateCardPrice(product.price))}</span>
+                            <span class="price-card-label">Transferencia (-25%):</span>
+                            <span class="price-card-value">${escapeHtml(transferPriceFormatted)}</span>
                         </div>
-                    ` : ''}
+                    `;
+                    })()}
                 </div>
                 
                 <div class="producto-details">
@@ -184,6 +204,10 @@
                     <div class="detail-item">
                         <span class="detail-icon">💳</span>
                         <span class="detail-text">Tarjeta de crédito: Hasta 3 cuotas sin interés</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-icon">💰</span>
+                        <span class="detail-text">Transferencia: 25% de descuento</span>
                     </div>
                 </div>
                 

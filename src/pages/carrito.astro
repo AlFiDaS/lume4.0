@@ -63,9 +63,8 @@ import Breadcrumb from '../components/Breadcrumb.astro';
                 <div class="form-group">
                   <label for="pago">Forma de pago</label>
                   <select id="pago">
-                    <option value="mercadopago_transferencia">MercadoPago (Transferencia)</option>
-                    <option value="transferencia_directa">Transferencia directa</option>
-                    <option value="tarjeta">Tarjeta (+25%) - hasta en 3 cuotas sin interés</option>
+                    <option value="tarjeta" selected>MercadoPago - Hasta en 3 cuotas sin interés</option>
+                    <option value="transferencia_directa">Transferencia (-25%)</option>
                   </select>
                 </div>
                 
@@ -97,8 +96,8 @@ import Breadcrumb from '../components/Breadcrumb.astro';
                   <select id="envio" required>
                     <option value="Corrientes Envio a Domicilio">Envío a Domicilio - Corrientes, Capital</option>
                     <option value="Corrientes Retiro en Sucursal">Retiro sin costo por Pasaje Alvarez 873 - Corrientes, Capital</option>
-                    <option value="Correo Argentino - Sucursal">Correo Argentino - Retiro en Sucursal ($6500)</option>
-                    <option value="Correo Argentino - Domicilio">Correo Argentino - Envío a Domicilio ($8500)</option>
+                    <option value="Correo Argentino - Sucursal">Correo Argentino - Retiro en Sucursal ($8500)</option>
+                    <option value="Correo Argentino - Domicilio">Correo Argentino - Envío a Domicilio ($10500)</option>
                   </select>
                 </div>
 
@@ -199,6 +198,14 @@ import Breadcrumb from '../components/Breadcrumb.astro';
       }
     }
 
+    // Función para extraer el valor numérico del precio (remueve $, puntos, comas, etc.)
+    function extractPriceValue(priceString) {
+      if (!priceString) return 0;
+      // Remover todos los caracteres no numéricos (incluyendo $, puntos, comas, espacios)
+      const cleaned = priceString.replace(/[^0-9]/g, '');
+      return parseInt(cleaned, 10) || 0;
+    }
+
     function renderCarrito() {
       const carrito = getCarrito();
       contenedor.innerHTML = "";
@@ -222,9 +229,19 @@ import Breadcrumb from '../components/Breadcrumb.astro';
       if (finalizarBtn) finalizarBtn.style.display = "inline-block";
       if (vaciarBtn) vaciarBtn.style.display = "inline-block";
 
+      // Función para calcular precio de tarjeta desde precio de transferencia (redondeado al 100)
+      function calculateCardPriceFromTransfer(transferPrice) {
+        return Math.round((transferPrice * 1.25) / 100) * 100;
+      }
+
       carrito.forEach((item) => {
         const card = document.createElement("div");
         card.className = "producto-carrito";
+
+        // El precio guardado es de transferencia, calcular precio de tarjeta para mostrar
+        const transferPriceValue = extractPriceValue(item.price);
+        const cardPriceValue = calculateCardPriceFromTransfer(transferPriceValue);
+        const priceFormatted = '$' + cardPriceValue.toLocaleString('es-AR');
 
         card.innerHTML = `
           <div class="producto-imagen" onclick="window.location.href='/${item.categoria}/${item.slug}'">
@@ -232,20 +249,21 @@ import Breadcrumb from '../components/Breadcrumb.astro';
           </div>
           <div class="producto-info">
             <h3>${item.name}</h3>
-            <p class="producto-precio">${item.price}</p>
-            <div class="producto-controles">
+            <div class="producto-precio-cantidad">
+              <p class="producto-precio">${priceFormatted}</p>
               <div class="cantidad-controles">
                 <button class="btn-cantidad menos" data-slug="${item.slug}">−</button>
                 <span class="cantidad">${item.cantidad}</span>
                 <button class="btn-cantidad mas" data-slug="${item.slug}">+</button>
               </div>
-              <button data-slug="${item.slug}" class="btn-remove">Eliminar</button>
             </div>
+            <button data-slug="${item.slug}" class="btn-remove">Eliminar</button>
           </div>
         `;
 
         contenedor.appendChild(card);
-        totalCarrito += parseInt(item.price.replace("$", "")) * item.cantidad;
+        // Sumar precio de tarjeta redondeado por unidad
+        totalCarrito += cardPriceValue * item.cantidad;
       });
 
       const get = id => document.getElementById(id)?.value || '';
@@ -264,11 +282,11 @@ import Breadcrumb from '../components/Breadcrumb.astro';
           envioTexto = "A coordinar precio";
           break;
         case "Correo Argentino - Sucursal":
-          envioCosto = 6500;
+          envioCosto = 8500;
           envioTexto = `$${envioCosto}`;
           break;
         case "Correo Argentino - Domicilio":
-          envioCosto = 8500;
+          envioCosto = 10500;
           envioTexto = `$${envioCosto}`;
           break;
         default:
@@ -276,22 +294,34 @@ import Breadcrumb from '../components/Breadcrumb.astro';
       }
 
       // Calcular precios según método de pago
+      // totalCarrito ya contiene el precio de tarjeta (calculado y redondeado)
       const isTarjeta = (pago === 'tarjeta');
       const isTransferenciaDirecta = (pago === 'transferencia_directa');
       
-      let subtotalCalculado = totalCarrito;
+      let subtotalCalculado = totalCarrito; // Precio de tarjeta
       let envioCalculado = envioCosto;
       
-      if (isTarjeta) {
-        subtotalCalculado = Math.round(totalCarrito * 1.25);
-        envioCalculado = Math.round(envioCosto * 1.25);
+      if (isTransferenciaDirecta) {
+        // Calcular precio de transferencia desde los precios originales
+        // Para evitar errores de redondeo, recalculamos desde los precios originales de transferencia
+        let totalTransferencia = 0;
+        carrito.forEach((item) => {
+          const transferPriceValue = extractPriceValue(item.price);
+          totalTransferencia += transferPriceValue * item.cantidad;
+        });
+        subtotalCalculado = totalTransferencia;
+        // Aplicar descuento del 25% al envío también (multiplicar por 0.8)
+        envioCalculado = Math.round(envioCosto * 0.8);
       }
       
       let totalFinal = subtotalCalculado + envioCalculado;
 
-      carritoTotalEl.textContent = `$${subtotalCalculado}`;
-      envioInfoEl.textContent = isTarjeta ? `$${envioCalculado} (+25%)` : envioTexto;
-      totalEl.textContent = `$${totalFinal}`;
+      // Formatear totales para visualización (con separadores de miles)
+      carritoTotalEl.textContent = isTransferenciaDirecta 
+        ? `$${subtotalCalculado.toLocaleString('es-AR')} (-25%)` 
+        : `$${subtotalCalculado.toLocaleString('es-AR')}`;
+      envioInfoEl.textContent = isTransferenciaDirecta ? `$${envioCalculado.toLocaleString('es-AR')} (-25%)` : envioTexto;
+      totalEl.textContent = `$${totalFinal.toLocaleString('es-AR')}`;
       
       // Mostrar/ocultar datos bancarios y botones según método de pago
       const datosBancarios = document.getElementById('datos-bancarios');
@@ -302,7 +332,7 @@ import Breadcrumb from '../components/Breadcrumb.astro';
       
       if (isTransferenciaDirecta) {
         if (datosBancarios) datosBancarios.style.display = 'block';
-        if (totalTransferir) totalTransferir.textContent = `$${totalFinal}`;
+        if (totalTransferir) totalTransferir.textContent = `$${totalFinal.toLocaleString('es-AR')}`;
         if (btnFinalizar) btnFinalizar.style.display = 'none';
         if (btnFinalizarDirecta) btnFinalizarDirecta.style.display = 'inline-block';
         // NO resetear el input aquí, solo reconfigurar el handler si es necesario
@@ -328,11 +358,9 @@ import Breadcrumb from '../components/Breadcrumb.astro';
         datosCliente += `\nProvincia: ${get('provincia')}\nLocalidad: ${get('localidad')}\nDirección: ${get('direccion')}\nCP: ${get('cp')}\nEmail: ${get('email')}\nObservaciones: ${get('observaciones')}`;
       }
 
-      let metodoPagoTexto = 'MercadoPago (Transferencia)';
-      if (pago === 'tarjeta') {
-        metodoPagoTexto = 'Tarjeta (+25% hasta en 3 cuotas sin interés)';
-      } else if (pago === 'transferencia_directa') {
-        metodoPagoTexto = 'Transferencia directa (alias: lume.co.mp)';
+      let metodoPagoTexto = 'MercadoPago - Hasta en 3 cuotas sin interés';
+      if (pago === 'transferencia_directa') {
+        metodoPagoTexto = 'Transferencia (-25%)';
       }
       
       const texto = encodeURIComponent(`Hola *Lume*, me gustaría hacer un pedido de:
@@ -340,7 +368,7 @@ ${carrito.map(p => `• ${p.name} - ${p.price} x${p.cantidad}`).join("\n")}
 Forma de pago: ${metodoPagoTexto}
 Aclaraciones: ${get('aclaraciones') || 'Ninguna'}
 *Tu carrito: $${subtotalCalculado}*
-Envío: ${isTarjeta ? `$${envioCalculado} (+25%)` : envioTexto}
+Envío: ${isTransferenciaDirecta ? `$${envioCalculado} (-25%)` : envioTexto}
 *Total a pagar: $${totalFinal}*
 
 ${datosCliente}
@@ -574,18 +602,27 @@ Gracias!`);
         // Obtener datos del carrito
         const carrito = getCarrito();
         
-        // Calcular total
+        // Función para extraer el valor numérico del precio (remueve $, puntos, comas, etc.)
+        function extractPriceValueLocal(priceString) {
+          if (!priceString) return 0;
+          // Remover todos los caracteres no numéricos (incluyendo $, puntos, comas, espacios)
+          const cleaned = priceString.replace(/[^0-9]/g, '');
+          return parseInt(cleaned, 10) || 0;
+        }
+
+        // Calcular total desde precios de transferencia (ya que es transferencia directa)
         let totalCarrito = 0;
         carrito.forEach(item => {
-          totalCarrito += parseInt(item.price.replace('$', '')) * item.cantidad;
+          // El precio guardado es de transferencia, usar directamente
+          totalCarrito += extractPriceValueLocal(item.price) * item.cantidad;
         });
         
         const envio = document.getElementById('envio')?.value || '';
         let envioCosto = 0;
         if (envio.includes('Correo Argentino - Sucursal')) {
-          envioCosto = 6500;
-        } else if (envio.includes('Correo Argentino - Domicilio')) {
           envioCosto = 8500;
+        } else if (envio.includes('Correo Argentino - Domicilio')) {
+          envioCosto = 10500;
         }
         
         const totalFinal = totalCarrito + envioCosto;

@@ -92,7 +92,10 @@ if (!empty($buscar)) {
 <div class="admin-content">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
         <h2>Lista de Productos</h2>
-        <a href="add.php" class="btn btn-primary">➕ Agregar Producto</a>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            <a href="ordenar.php" class="btn btn-secondary">📋 Ordenar Productos</a>
+            <a href="add.php" class="btn btn-primary">➕ Agregar Producto</a>
+        </div>
     </div>
     
     <!-- Filtros -->

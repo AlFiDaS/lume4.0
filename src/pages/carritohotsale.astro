@@ -45,8 +45,8 @@ import Layout from '../layouts/Layout.astro';
             <select id="envio" required>
               <option value="Corrientes Envio a Domicilio">Envio a Domicilio - Corrientes, Capital</option>
               <option value="Corrientes Retiro en Sucursal">Retiro sin costo por Pasaje Alvarez 873 - Corrientes, Capital</option>
-              <option value="Correo Argentino - Sucursal">Correo Argentino - Retiro en Sucursal ($6500)</option>
-              <option value="Correo Argentino - Domicilio">Correo Argentino - Envío a Domicilio ($8500)</option>
+              <option value="Correo Argentino - Sucursal">Correo Argentino - Retiro en Sucursal ($8500)</option>
+              <option value="Correo Argentino - Domicilio">Correo Argentino - Envío a Domicilio ($10500)</option>
             </select>
           </label>
 
@@ -182,11 +182,11 @@ import Layout from '../layouts/Layout.astro';
           envioTexto = "A coordinar precio";
           break;
         case "Correo Argentino - Sucursal":
-          envioCosto = 6500;
+          envioCosto = 8500;
           envioTexto = `$${envioCosto}`;
           break;
         case "Correo Argentino - Domicilio":
-          envioCosto = 8500;
+          envioCosto = 10500;
           envioTexto = `$${envioCosto}`;
           break;
         default:
