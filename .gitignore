@@ -20,6 +20,10 @@ pnpm-debug.log*
 .env
 .env.production
 
+# archivos de secretos y configuración sensible
+.csrf_secret
+config.local.php
+
 # macOS-specific files
 .DS_Store
 

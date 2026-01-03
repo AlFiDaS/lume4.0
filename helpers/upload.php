@@ -70,7 +70,26 @@ function validateUploadedFile($file) {
         return ['valid' => false, 'error' => 'Extensión de archivo no permitida'];
     }
     
-    return ['valid' => true, 'error' => null, 'mime' => $mimeType, 'ext' => $ext];
+    // Validación adicional: Verificar que es realmente una imagen usando getimagesize
+    // Esto previene ataques donde se cambia la extensión pero el contenido no es una imagen
+    require_once __DIR__ . '/security.php';
+    $imageValidation = validateImageContent($file['tmp_name'], UPLOAD_ALLOWED_TYPES);
+    
+    if (!$imageValidation['valid']) {
+        return ['valid' => false, 'error' => $imageValidation['error']];
+    }
+    
+    // Verificar que el tipo MIME detectado por getimagesize coincide con el detectado anteriormente
+    $realMime = $imageValidation['imageInfo']['mime'] ?? null;
+    if ($realMime && $mimeType && $realMime !== $mimeType) {
+        // Si hay discrepancia, confiar en getimagesize (más seguro)
+        if (!in_array($realMime, UPLOAD_ALLOWED_TYPES)) {
+            return ['valid' => false, 'error' => 'El contenido del archivo no coincide con su extensión. Tipo real: ' . $realMime];
+        }
+        $mimeType = $realMime; // Usar el tipo real
+    }
+    
+    return ['valid' => true, 'error' => null, 'mime' => $mimeType, 'ext' => $ext, 'imageInfo' => $imageValidation['imageInfo']];
 }
 
 /**

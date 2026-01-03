@@ -42,8 +42,25 @@ function startSecureSession() {
 function generateCSRFToken() {
     startSecureSession();
     
+    // Cargar helper de seguridad si está disponible
+    if (file_exists(__DIR__ . '/security.php')) {
+        require_once __DIR__ . '/security.php';
+        if (function_exists('generateSecureCSRFToken')) {
+            return generateSecureCSRFToken();
+        }
+    }
+    
+    // Fallback al método original
     if (!isset($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        $_SESSION['csrf_token_created'] = time();
+    }
+    
+    // Regenerar token cada 30 minutos para mayor seguridad
+    if (isset($_SESSION['csrf_token_created']) && 
+        (time() - $_SESSION['csrf_token_created']) > 1800) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        $_SESSION['csrf_token_created'] = time();
     }
     
     return $_SESSION['csrf_token'];

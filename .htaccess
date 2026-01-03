@@ -48,7 +48,13 @@
 </IfModule>
 
 # Proteger archivos sensibles
-<FilesMatch "^(config|db|auth|upload|slugify|cache-bust)\.php$">
+<FilesMatch "^(config|db|auth|upload|slugify|cache-bust|security)\.php$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Proteger archivo de secretos CSRF
+<FilesMatch "^\..*secret$">
     Order Allow,Deny
     Deny from all
 </FilesMatch>

@@ -91,8 +91,31 @@ define('API_URL', BASE_URL . '/api');
 // ============================================
 // CONFIGURACIÓN DE SEGURIDAD
 // ============================================
-// Clave secreta para tokens CSRF (cambia esto)
-define('CSRF_SECRET', 'cambia-esta-clave-secreta-por-una-aleatoria-muy-larga-123456789');
+// Clave secreta para tokens CSRF
+// IMPORTANTE: Esta clave se genera automáticamente. Si necesitas regenerarla,
+// elimina esta línea y se generará una nueva al cargar la página.
+if (!defined('CSRF_SECRET')) {
+    // Generar una clave aleatoria segura de 64 caracteres
+    // Si existe un archivo .csrf_secret, usarlo; si no, generar uno nuevo
+    $csrfSecretFile = BASE_PATH . '/.csrf_secret';
+    if (file_exists($csrfSecretFile) && is_readable($csrfSecretFile)) {
+        $secret = trim(file_get_contents($csrfSecretFile));
+        if (strlen($secret) >= 32) {
+            define('CSRF_SECRET', $secret);
+        } else {
+            // Si el archivo existe pero es inválido, generar uno nuevo
+            $newSecret = bin2hex(random_bytes(32));
+            @file_put_contents($csrfSecretFile, $newSecret, LOCK_EX);
+            define('CSRF_SECRET', $newSecret);
+        }
+    } else {
+        // Generar nueva clave y guardarla
+        $newSecret = bin2hex(random_bytes(32));
+        @file_put_contents($csrfSecretFile, $newSecret, LOCK_EX);
+        @chmod($csrfSecretFile, 0600); // Solo lectura/escritura para el propietario
+        define('CSRF_SECRET', $newSecret);
+    }
+}
 
 // Configuración de sesiones
 define('SESSION_NAME', 'LUME_ADMIN_SESSION');

@@ -37,6 +37,20 @@ require_once '../helpers/cache-bust.php';
 require_once '../helpers/auth.php'; // Para función sanitize()
 
 try {
+    // Rate limiting para prevenir abuso
+    require_once '../helpers/security.php';
+    $rateLimit = checkRateLimit('api_galeria', 120, 60); // 120 requests por minuto
+    
+    if (!$rateLimit['allowed']) {
+        http_response_code(429); // Too Many Requests
+        header('Retry-After: ' . ($rateLimit['reset_at'] - time()));
+        echo json_encode([
+            'error' => 'Demasiadas solicitudes. Por favor, intenta más tarde.',
+            'retry_after' => $rateLimit['reset_at'] - time()
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    
     // Construir consulta con filtros
     $sql = "SELECT id, nombre, imagen, alt, orden 
             FROM galeria 

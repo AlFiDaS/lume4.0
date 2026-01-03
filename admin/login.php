@@ -16,17 +16,27 @@ if (isAuthenticated()) {
 
 // Procesar login
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = sanitize($_POST['username'] ?? '');
-    $password = $_POST['password'] ?? '';
+    // Rate limiting para login (más restrictivo)
+    require_once '../helpers/security.php';
+    $rateLimit = checkRateLimit('login_attempt', 5, 900); // 5 intentos cada 15 minutos
     
-    if (empty($username) || empty($password)) {
-        $error = 'Por favor, completa todos los campos';
+    if (!$rateLimit['allowed']) {
+        $timeLeft = $rateLimit['reset_at'] - time();
+        $minutesLeft = ceil($timeLeft / 60);
+        $error = "Demasiados intentos de login. Por favor, espera {$minutesLeft} minuto(s) antes de intentar nuevamente.";
     } else {
-        if (login($username, $password)) {
-            header('Location: ' . ADMIN_URL . '/index.php');
-            exit;
+        $username = sanitize($_POST['username'] ?? '');
+        $password = $_POST['password'] ?? '';
+        
+        if (empty($username) || empty($password)) {
+            $error = 'Por favor, completa todos los campos';
         } else {
-            $error = 'Usuario o contraseña incorrectos';
+            if (login($username, $password)) {
+                header('Location: ' . ADMIN_URL . '/index.php');
+                exit;
+            } else {
+                $error = 'Usuario o contraseña incorrectos';
+            }
         }
     }
 }

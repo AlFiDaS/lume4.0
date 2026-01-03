@@ -40,6 +40,20 @@ ini_set('display_errors', 0);
 require_once '../helpers/categories.php';
 
 try {
+    // Rate limiting para prevenir abuso
+    require_once '../helpers/security.php';
+    $rateLimit = checkRateLimit('api_categories', 120, 60); // 120 requests por minuto
+    
+    if (!$rateLimit['allowed']) {
+        http_response_code(429); // Too Many Requests
+        header('Retry-After: ' . ($rateLimit['reset_at'] - time()));
+        echo json_encode([
+            'error' => 'Demasiadas solicitudes. Por favor, intenta más tarde.',
+            'retry_after' => $rateLimit['reset_at'] - time()
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    
     // Obtener solo categorías visibles (para el navbar público)
     $onlyVisible = isset($_GET['visible']) && $_GET['visible'] === 'false' ? false : true;
     $categorias = getAllCategories($onlyVisible);
