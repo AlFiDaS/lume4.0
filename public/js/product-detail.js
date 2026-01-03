@@ -373,6 +373,7 @@
                     }, 500);
                 }
                 
+                
             } catch (error) {
                 showError(container, error.message || 'Error desconocido');
             }

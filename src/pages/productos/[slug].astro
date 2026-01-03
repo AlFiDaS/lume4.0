@@ -64,7 +64,7 @@ export async function getStaticPaths() {
         // Cargar el script si no está cargado
         if (!window.initProductDetail) {
           const script = document.createElement('script');
-          script.src = '/js/product-detail.js';
+          script.src = '/js/product-detail.js?v=2.1.4-2026-01-03T14-11-34';
           script.onload = function() {
             if (window.initProductDetail) {
               window.initProductDetail(productSlug, {

@@ -92,7 +92,7 @@ const canonicalURL = canonical ? new URL(canonical, Astro.site) : Astro.url;
     <link rel="manifest" href="/manifest.json" />
     
     <!-- 🚀 PRELOADS CRÍTICOS -->
-    <link rel="preload" href="/global.css?v=2.1.1-2026-01-02T23-05-33" as="style" />
+    <link rel="preload" href="/global.css?v=2.1.4-2026-01-03T14-11-34" as="style" />
     <link rel="preload" href="/js/cart.js?v=2.1.0-2025-09-03T22-17-43-2025-09-03T22-16-50-2025-09-03T22-13-49" as="script" />
     <link rel="preload" href="/images/hero.webp" as="image" />
     
@@ -134,12 +134,36 @@ const canonicalURL = canonical ? new URL(canonical, Astro.site) : Astro.url;
     })} />
     
     <!-- 🎨 CSS CRÍTICO -->
-    <link rel="stylesheet" href="/global.css?v=2.1.1-2026-01-02T23-05-33">
+    <link rel="stylesheet" href="/global.css?v=2.1.4-2026-01-03T14-11-34">
     
     <!-- 📊 ANALYTICS (opcional) -->
     <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script> -->
   </head>
   <body>
+    <!-- 🔄 DETECTAR CAMBIOS DE VERSIÓN Y FORZAR RECARGA -->
+    <script is:inline>
+      const CURRENT_CSS_VERSION = '2.1.4-2026-01-03T14-11-34';
+      const CURRENT_JS_VERSION = '2.1.4-2026-01-03T14-11-34';
+      
+      // Verificar versión de CSS
+      const storedCssVersion = localStorage.getItem('css_version');
+      if (storedCssVersion && storedCssVersion !== CURRENT_CSS_VERSION) {
+        localStorage.setItem('css_version', CURRENT_CSS_VERSION);
+        window.location.reload();
+      } else if (!storedCssVersion) {
+        localStorage.setItem('css_version', CURRENT_CSS_VERSION);
+      }
+      
+      // Verificar versión de JS
+      const storedJsVersion = localStorage.getItem('js_version');
+      if (storedJsVersion && storedJsVersion !== CURRENT_JS_VERSION) {
+        localStorage.setItem('js_version', CURRENT_JS_VERSION);
+        window.location.reload();
+      } else if (!storedJsVersion) {
+        localStorage.setItem('js_version', CURRENT_JS_VERSION);
+      }
+    </script>
+    
     <!-- 🔝 FORZAR SCROLL ARRIBA AL REFRESCAR -->
     <script is:inline>
       // Deshabilitar restauración automática del scroll del navegador
@@ -269,7 +293,7 @@ const canonicalURL = canonical ? new URL(canonical, Astro.site) : Astro.url;
     <script src="/js/products-loader.js" is:inline></script>
     
     <!-- 📦 SCRIPT DE DETALLE DE PRODUCTO -->
-    <script src="/js/product-detail.js" is:inline></script>
+    <script src="/js/product-detail.js?v=2.1.4-2026-01-03T14-11-34" is:inline></script>
     
     <!-- 🖼️ SCRIPT DE CARGA DINÁMICA DE GALERÍA -->
     <script src="/js/galeria-loader.js" is:inline></script>
