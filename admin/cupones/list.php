@@ -20,6 +20,9 @@ $coupons = getAllCoupons(false);
 ?>
 
 <div class="admin-content">
+    <div style="margin-bottom: 1.5rem;">
+        <a href="<?= ADMIN_URL ?>/index.php" class="btn btn-secondary">← Volver al Dashboard</a>
+    </div>
     <div class="page-header">
         <h2>Cupones y Descuentos</h2>
         <a href="add.php" class="btn btn-primary">➕ Nuevo Cupón</a>

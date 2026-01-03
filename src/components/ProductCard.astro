@@ -42,8 +42,15 @@ if (priceMatch) {
         class="imagen-con-transicion"
         width="400"
         height="400"
-        onmouseover={hasValidHover ? `this.src='${displayHover}'` : null}
-        onmouseout={`this.src='${displayImage}'`}
+        loading="eager"
+        decoding="sync"
+        fetchpriority="high"
+        style="opacity: 1; visibility: visible; display: block;"
+        {...(hasValidHover ? {
+          onmouseover: `this.src='${displayHover}'`,
+          onmouseout: `this.src='${displayImage}'`
+        } : {})}
+        onload="this.style.opacity='1'; this.style.visibility='visible'; this.classList.add('loaded');"
         onerror="this.onerror=null; this.src='/images/placeholder.svg';"
       />
     </a>
@@ -135,7 +142,8 @@ if (priceMatch) {
     font-size: 1.2rem;
     opacity: 0.3;
     transition: all 0.3s ease;
-    z-index: 1;
+    z-index: 2;
+    pointer-events: none;
   }
 
   .product-card:hover::after {
@@ -168,7 +176,9 @@ if (priceMatch) {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    display: block;
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
     transition: all var(--transition-normal);
     /* 🚀 OPTIMIZACIONES DE RENDERING */
     image-rendering: -webkit-optimize-contrast;

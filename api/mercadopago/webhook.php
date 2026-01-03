@@ -74,7 +74,7 @@ try {
             $dataId = $_POST['data.id'] ?? $_POST['data_id'] ?? '';
         }
     }
-    
+
     logWebhook("Webhook recibido - Type: $type, Data ID: $dataId, Method: " . ($_SERVER['REQUEST_METHOD'] ?? 'UNKNOWN'));
 
     // Si no hay parámetros, puede ser una prueba manual o acceso directo

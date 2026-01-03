@@ -136,7 +136,11 @@
                         src="${escapeHtml(imageSrc)}" 
                         alt="${escapeHtml(product.name)}"
                         class="imagen-principal"
+                        width="800"
+                        height="800"
                         loading="eager"
+                        decoding="async"
+                        fetchpriority="high"
                         onerror="if(this.src!=='/images/placeholder.svg'){this.onerror=null;this.src='/images/placeholder.svg';}else{this.style.display='none';}"
                     />
                 </div>
@@ -146,6 +150,10 @@
                             <img 
                                 src="${escapeHtml(imageSrc)}" 
                                 alt="Vista principal"
+                                width="200"
+                                height="200"
+                                loading="lazy"
+                                decoding="async"
                                 onerror="if(this.src!=='/images/placeholder.svg'){this.onerror=null;this.src='/images/placeholder.svg';}else{this.style.display='none';}"
                             />
                         </div>
@@ -153,6 +161,10 @@
                             <img 
                                 src="${escapeHtml(hoverImage)}" 
                                 alt="Vista hover"
+                                width="200"
+                                height="200"
+                                loading="lazy"
+                                decoding="async"
                                 onerror="if(this.src!=='/images/placeholder.svg'){this.onerror=null;this.src='/images/placeholder.svg';}else{this.style.display='none';}"
                             />
                         </div>

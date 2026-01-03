@@ -125,7 +125,8 @@
         // Hover image: usar hoverImage si existe y es válido, sino usar la imagen principal
         const hasValidHover = product.hoverImage && product.hoverImage.trim() !== '';
         const hoverImage = hasValidHover ? product.hoverImage : imageSrc;
-        const hoverAttr = (hasValidHover && hasValidImage) ? 
+        // Solo agregar hover attributes si hay una imagen hover válida Y diferente a la principal
+        const hoverAttr = (hasValidHover && hasValidImage && hoverImage !== imageSrc) ? 
             `onmouseover="this.src='${escapeHtml(hoverImage)}'" onmouseout="this.src='${escapeHtml(imageSrc)}'"` : 
             '';
         
@@ -165,7 +166,11 @@
                             width="400"
                             height="400"
                             ${hoverAttr}
-                            loading="lazy"
+                            loading="eager"
+                            decoding="sync"
+                            fetchpriority="high"
+                            style="opacity: 1; visibility: visible; display: block;"
+                            onload="this.style.opacity='1'; this.style.visibility='visible'; this.classList.add('loaded');"
                             onerror="if(this.src!=='${placeholderPath}'){this.onerror=null;this.src='${placeholderPath}';}else{this.style.display='none';}"
                         />
                     </a>
@@ -241,11 +246,43 @@
         
         container.innerHTML = html;
         
+        // Forzar carga inmediata de imágenes después de renderizar
+        requestAnimationFrame(() => {
+            const images = container.querySelectorAll('img.imagen-con-transicion');
+            images.forEach((img, index) => {
+                // Para las primeras 8 imágenes visibles, usar fetchpriority="high"
+                if (index < 8) {
+                    img.setAttribute('fetchpriority', 'high');
+                }
+                
+                // Forzar carga inmediata creando un nuevo Image object
+                const imgLoader = new Image();
+                imgLoader.onload = function() {
+                    // Una vez cargada, asegurar que se muestre
+                    if (img.src !== imgLoader.src) {
+                        img.src = imgLoader.src;
+                    }
+                    img.style.opacity = '1';
+                    img.style.visibility = 'visible';
+                };
+                imgLoader.onerror = function() {
+                    // Si falla, usar placeholder
+                    img.src = '/images/placeholder.svg';
+                };
+                imgLoader.src = img.src;
+                
+                // También forzar carga del elemento img directamente
+                if (!img.complete) {
+                    img.loading = 'eager';
+                }
+            });
+        });
+        
         // Actualizar estados de wishlist después de renderizar
         if (window.loadWishlistStates && typeof window.loadWishlistStates === 'function') {
             setTimeout(() => {
                 window.loadWishlistStates();
-            }, 100);
+            }, 200);
         }
     }
     

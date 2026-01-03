@@ -68,8 +68,29 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // 🖼️ IMÁGENES: Cache First con fallback a red
+  // 🖼️ IMÁGENES: Network First para imágenes con cache busting, Cache First para otras
   if (request.destination === 'image') {
+    // Si tiene query string v= (cache busting), siempre cargar desde red
+    if (url.search.includes('v=')) {
+      event.respondWith(
+        fetch(request, { 
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          }
+        }).then(response => {
+          // No cachear imágenes con cache busting
+          return response;
+        }).catch(() => {
+          // Si falla, intentar desde cache como último recurso
+          return caches.match(request);
+        })
+      );
+      return;
+    }
+    
+    // Para imágenes sin cache busting, usar Cache First
     event.respondWith(
       caches.match(request)
         .then(response => {

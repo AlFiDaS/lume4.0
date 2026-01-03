@@ -26,7 +26,17 @@ $salesByDay = getSalesByDay();
     <p style="color: #666; margin-bottom: 2rem;">Bienvenido al panel de administración de LUME</p>
     
     <!-- Estadísticas de Ventas -->
-    <div class="section-title">📊 Ventas</div>
+    <div class="section-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <span>📊 Ventas</span>
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <a href="<?= ADMIN_URL ?>/reports/list.php" class="btn btn-primary" style="font-size: 0.95rem; padding: 0.75rem 1.5rem; border-radius: 6px; box-shadow: 0 2px 4px rgba(224, 164, 206, 0.3);">
+                📊 Reportes Mensuales
+            </a>
+            <a href="<?= ADMIN_URL ?>/backup/list.php" class="btn btn-secondary" style="font-size: 0.95rem; padding: 0.75rem 1.5rem; border-radius: 6px; box-shadow: 0 2px 4px rgba(108, 117, 125, 0.3);">
+                💾 Backups
+            </a>
+        </div>
+    </div>
     <div class="stats-grid">
         <div class="stat-card stat-sales">
             <div class="stat-number">$<?= number_format($dashboardStats['today']['total_revenue'], 2, ',', '.') ?></div>
@@ -54,7 +64,12 @@ $salesByDay = getSalesByDay();
     </div>
     
     <!-- Estadísticas de Productos -->
-    <div class="section-title">📦 Productos</div>
+    <div class="section-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <span>📦 Productos</span>
+        <a href="<?= ADMIN_URL ?>/cupones/list.php" class="btn btn-primary" style="font-size: 0.95rem; padding: 0.75rem 1.5rem; border-radius: 6px; box-shadow: 0 2px 4px rgba(224, 164, 206, 0.3);">
+            🎟️ Cupones
+        </a>
+    </div>
     <div class="stats-grid">
         <div class="stat-card stat-total">
             <div class="stat-number"><?= $dashboardStats['total_products'] ?></div>
@@ -163,7 +178,12 @@ $salesByDay = getSalesByDay();
     if (!empty($categorias)):
     ?>
     <div class="category-summary">
-        <h3 class="section-title">📁 Productos por Categoría</h3>
+        <div class="section-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <span>📁 Productos por Categoría</span>
+            <a href="<?= ADMIN_URL ?>/categorias/list.php" class="btn btn-primary" style="font-size: 0.95rem; padding: 0.75rem 1.5rem; border-radius: 6px; box-shadow: 0 2px 4px rgba(224, 164, 206, 0.3);">
+                ✏️ Editar Categorías
+            </a>
+        </div>
         <div class="category-grid">
             <?php foreach ($categorias as $cat): ?>
                 <div class="category-item">

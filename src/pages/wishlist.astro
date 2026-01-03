@@ -131,6 +131,7 @@ import Breadcrumb from '../components/Breadcrumb.astro';
                       height="400"
                       ${hoverAttr}
                       loading="lazy"
+                      decoding="async"
                       onerror="if(this.src!=='${placeholderPath}'){this.onerror=null;this.src='${placeholderPath}';}else{this.style.display='none';}"
                     />
                   </a>

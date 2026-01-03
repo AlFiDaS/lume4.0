@@ -26,6 +26,9 @@ require_once '../_inc/header.php';
 ?>
 
 <div class="admin-content">
+    <div style="margin-bottom: 1.5rem;">
+        <a href="<?= ADMIN_URL ?>/index.php" class="btn btn-secondary">← Volver al Dashboard</a>
+    </div>
     <div class="page-header">
         <h2>Gestionar Categorías</h2>
         <div style="display: flex; gap: 1rem; align-items: center;">

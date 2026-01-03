@@ -92,14 +92,15 @@ const canonicalURL = canonical ? new URL(canonical, Astro.site) : Astro.url;
     <link rel="manifest" href="/manifest.json" />
     
     <!-- 🚀 PRELOADS CRÍTICOS -->
-    <link rel="preload" href="/global.css?v=2.1.4-2026-01-03T14-11-34" as="style" />
+    <link rel="preload" href="/global.css?v=2.1.9-2026-01-03T16-35-00" as="style" />
     <link rel="preload" href="/js/cart.js?v=2.1.0-2025-09-03T22-17-43-2025-09-03T22-16-50-2025-09-03T22-13-49" as="script" />
-    <link rel="preload" href="/images/hero.webp" as="image" />
+    <link rel="preload" href="/images/hero.webp" as="image" fetchpriority="high" />
     
     <!-- 🎨 FUENTES OPTIMIZADAS -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" /></noscript>
     
     <!-- 📱 META TAGS MÓVILES -->
     <meta name="theme-color" content="#e0a4ce" />
@@ -134,7 +135,7 @@ const canonicalURL = canonical ? new URL(canonical, Astro.site) : Astro.url;
     })} />
     
     <!-- 🎨 CSS CRÍTICO -->
-    <link rel="stylesheet" href="/global.css?v=2.1.4-2026-01-03T14-11-34">
+    <link rel="stylesheet" href="/global.css?v=2.1.9-2026-01-03T16-35-00">
     
     <!-- 📊 ANALYTICS (opcional) -->
     <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script> -->
@@ -142,8 +143,8 @@ const canonicalURL = canonical ? new URL(canonical, Astro.site) : Astro.url;
   <body>
     <!-- 🔄 DETECTAR CAMBIOS DE VERSIÓN Y FORZAR RECARGA -->
     <script is:inline>
-      const CURRENT_CSS_VERSION = '2.1.4-2026-01-03T14-11-34';
-      const CURRENT_JS_VERSION = '2.1.4-2026-01-03T14-11-34';
+      const CURRENT_CSS_VERSION = '2.1.9-2026-01-03T16-35-00';
+      const CURRENT_JS_VERSION = '2.1.9-2026-01-03T16-35-00';
       
       // Verificar versión de CSS
       const storedCssVersion = localStorage.getItem('css_version');
@@ -249,11 +250,11 @@ const canonicalURL = canonical ? new URL(canonical, Astro.site) : Astro.url;
       });
     </script>
     
-    <!-- 🛒 SCRIPT DEL CARRITO -->
-    <script src="/js/cart.js?v=2.1.0-2025-09-03T22-17-43-2025-09-03T22-16-50-2025-09-03T22-13-49" is:inline></script>
+    <!-- 🛒 SCRIPT DEL CARRITO (diferido) -->
+    <script src="/js/cart.js?v=2.1.0-2025-09-03T22-17-43-2025-09-03T22-16-50-2025-09-03T22-13-49" defer></script>
     
-    <!-- ❤️ SCRIPT DE WISHLIST -->
-    <script src="/js/wishlist.js" is:inline></script>
+    <!-- ❤️ SCRIPT DE WISHLIST (diferido) -->
+    <script src="/js/wishlist.js" defer></script>
     
     <!-- 🔄 SCRIPT DE ACTUALIZACIÓN FORZADA - Inline para evitar cache de SW -->
     <script is:inline>
@@ -287,16 +288,12 @@ const canonicalURL = canonical ? new URL(canonical, Astro.site) : Astro.url;
         }
       })();
     </script>
-    <script src="/js/force-update.js?v=2.1.0-2025-09-03T22-17-43-2025-09-03T22-16-50-2025-09-03T22-13-49" is:inline></script>
+    <script src="/js/force-update.js?v=2.1.0-2025-09-03T22-17-43-2025-09-03T22-16-50-2025-09-03T22-13-49" defer></script>
     
-    <!-- 📦 SCRIPT DE CARGA DINÁMICA DE PRODUCTOS -->
-    <script src="/js/products-loader.js" is:inline></script>
-    
-    <!-- 📦 SCRIPT DE DETALLE DE PRODUCTO -->
-    <script src="/js/product-detail.js?v=2.1.4-2026-01-03T14-11-34" is:inline></script>
-    
-    <!-- 🖼️ SCRIPT DE CARGA DINÁMICA DE GALERÍA -->
-    <script src="/js/galeria-loader.js" is:inline></script>
+    <!-- 📦 SCRIPTS DIFERIDOS PARA MEJOR PERFORMANCE EN MOBILE -->
+    <script src="/js/products-loader.js" defer></script>
+    <script src="/js/product-detail.js?v=2.1.6-2026-01-03T16-11-17" defer></script>
+    <script src="/js/galeria-loader.js" defer></script>
   </body>
 </html>
 

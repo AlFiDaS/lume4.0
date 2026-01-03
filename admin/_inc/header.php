@@ -398,6 +398,161 @@ $currentUser = getCurrentUser();
             box-shadow: 0 2px 4px rgba(220,53,69,0.3);
         }
         
+        /* 🎨 COMPONENTES MODERNOS */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+            border: 1px solid #f0f0f0;
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            transform: translateY(-2px);
+        }
+        
+        .card h3 {
+            margin: 0 0 1rem 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .data-table thead {
+            background: linear-gradient(135deg, #e0a4ce 0%, #d89bc0 100%);
+            color: white;
+        }
+        
+        .data-table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .data-table tbody tr {
+            transition: background 0.2s ease;
+        }
+        
+        .data-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .btn-small.btn-primary {
+            background: #e0a4ce;
+            color: white;
+        }
+        
+        .btn-small.btn-primary:hover {
+            background: #d89bc0;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(224, 164, 206, 0.3);
+        }
+        
+        .btn-small.btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-small.btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .btn-small.btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-small.btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+            margin: 2rem 0 1rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e0a4ce;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid #f0f0f0;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #e0a4ce;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            font-size: 1rem;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .stat-subtitle {
+            font-size: 0.85rem;
+            color: #999;
+            margin-top: 0.25rem;
+        }
+        
         /* 📱 RESPONSIVE STYLES */
         @media (max-width: 768px) {
             .admin-header {
@@ -800,9 +955,7 @@ $currentUser = getCurrentUser();
             <nav class="admin-header-nav" id="admin-header-nav">
                 <a href="<?= ADMIN_URL ?>/index.php">Dashboard</a>
                 <a href="<?= ADMIN_URL ?>/list.php">Productos</a>
-                <a href="<?= ADMIN_URL ?>/categorias/list.php">Categorías</a>
                 <a href="<?= ADMIN_URL ?>/galeria/list.php">Galería</a>
-                <a href="<?= ADMIN_URL ?>/cupones/list.php">Cupones</a>
                 <a href="<?= ADMIN_URL ?>/ordenes/list.php">Pedidos</a>
                 <a href="<?= ADMIN_URL ?>/logout.php" class="logout-btn">Salir</a>
             </nav>
