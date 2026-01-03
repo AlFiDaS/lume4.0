@@ -170,8 +170,26 @@ try {
                         }
                     }
                     
+                    // Verificar si el estado cambió a 'approved' (pago aprobado)
+                    $wasApproved = ($updateData['status'] ?? '') === 'approved' && ($order['status'] ?? '') !== 'approved';
+                    
                     updateOrder($order['id'], $updateData);
                     logWebhook("Orden #" . $order['id'] . " actualizada con status: " . $updateData['status']);
+                    
+                    // Enviar notificación a Telegram si el pago fue aprobado
+                    if ($wasApproved) {
+                        try {
+                            require_once '../../helpers/telegram.php';
+                            if (function_exists('sendTelegramNotification') && function_exists('formatOrderNotification')) {
+                                $orderData = array_merge($order, $updateData);
+                                $message = formatOrderNotification($orderData, $order['id']);
+                                sendTelegramNotification($message);
+                                logWebhook("Notificación de Telegram enviada para orden #" . $order['id']);
+                            }
+                        } catch (Exception $e) {
+                            logWebhook("Error al enviar notificación de Telegram: " . $e->getMessage());
+                        }
+                    }
                 } else {
                     logWebhook("Orden no encontrada para external_reference: " . $externalRef);
                 }

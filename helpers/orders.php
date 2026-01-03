@@ -84,7 +84,24 @@ function saveOrder($orderData) {
     ];
     
     if (executeQuery($sql, $params)) {
-        return lastInsertId();
+        $orderId = lastInsertId();
+        
+        // Enviar notificación a Telegram
+        if ($orderId) {
+            try {
+                require_once __DIR__ . '/telegram.php';
+                if (function_exists('sendTelegramNotification') && function_exists('formatOrderNotification')) {
+                    $orderDataWithId = array_merge($orderData, ['id' => $orderId]);
+                    $message = formatOrderNotification($orderDataWithId, $orderId);
+                    sendTelegramNotification($message);
+                }
+            } catch (Exception $e) {
+                // No fallar si Telegram no funciona, solo loguear el error
+                error_log('Error al enviar notificación de Telegram: ' . $e->getMessage());
+            }
+        }
+        
+        return $orderId;
     }
     
     return false;

@@ -120,6 +120,18 @@ define('MERCADOPAGO_ACCESS_TOKEN', 'APP_USR-4995881903914776-122918-9af395eea1c8
 define('MERCADOPAGO_TEST_MODE', true);
 
 // ============================================
+// CONFIGURACIÓN DE TELEGRAM
+// ============================================
+// Obtén tu Bot Token de @BotFather en Telegram
+// Obtén tu Chat ID de @userinfobot en Telegram
+// Pasos:
+// 1. Busca @BotFather en Telegram y crea un bot con /newbot
+// 2. Guarda el token que te da (ejemplo: 123456789:ABCdefGHIjklMNOpqrsTUVwxyz)
+// 3. Busca @userinfobot en Telegram y envía cualquier mensaje para obtener tu Chat ID
+define('TELEGRAM_BOT_TOKEN', '8419391537:AAE9idcO4JuwFjOMRrfM-YvUjJ9xrMmExP0');
+define('TELEGRAM_CHAT_ID', '8228149072');
+
+// ============================================
 // CONFIGURACIÓN GENERAL
 // ============================================
 define('SITE_NAME', 'LUME - Velas Artesanales');
