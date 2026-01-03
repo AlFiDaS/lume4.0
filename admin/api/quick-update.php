@@ -46,9 +46,12 @@ switch ($field) {
         $validatedValue = trim($value);
         break;
     case 'visible':
-    case 'stock':
     case 'destacado':
         $validatedValue = (int)(bool)$value;
+        break;
+    case 'stock':
+        // Para stock: si está marcado (true) = NULL (ilimitado), si está desmarcado (false) = 0 (sin stock)
+        $validatedValue = $value ? null : 0;
         break;
 }
 
@@ -61,11 +64,17 @@ if (!$product) {
 }
 
 // Actualizar
-$sql = "UPDATE products SET `{$field}` = :value WHERE id = :id";
-$params = [
-    'value' => $validatedValue,
-    'id' => $productId
-];
+// Para stock NULL, necesitamos usar IS NULL en lugar de = NULL
+if ($field === 'stock' && $validatedValue === null) {
+    $sql = "UPDATE products SET `{$field}` = NULL WHERE id = :id";
+    $params = ['id' => $productId];
+} else {
+    $sql = "UPDATE products SET `{$field}` = :value WHERE id = :id";
+    $params = [
+        'value' => $validatedValue,
+        'id' => $productId
+    ];
+}
 
 if (executeQuery($sql, $params)) {
     echo json_encode([

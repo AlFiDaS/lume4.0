@@ -91,6 +91,10 @@ try {
     // Generar referencia externa única
     $externalReference = uniqid('lume_direct_', true);
     
+    // Obtener cupón si existe
+    $couponCode = $formData['coupon_code'] ?? null;
+    $discountAmount = isset($formData['discount_amount']) ? floatval($formData['discount_amount']) : 0;
+    
     // Preparar datos de la orden (primero sin proof_image)
     $orderData = [
         'preference_id' => null,
@@ -108,6 +112,8 @@ try {
         'shipping_type' => (is_array($formData['shipping']) ? ($formData['shipping']['type'] ?? '') : ''),
         'shipping_address' => (is_array($formData['shipping']) ? ($formData['shipping']['address'] ?? '') : ''),
         'notes' => $formData['notes'] ?? '',
+        'coupon_code' => $couponCode,
+        'discount_amount' => $discountAmount,
         'metadata' => $formData
     ];
     

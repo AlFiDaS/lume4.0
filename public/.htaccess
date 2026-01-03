@@ -9,9 +9,18 @@
 </FilesMatch>
 
 # 🎨 ARCHIVOS CSS Y JS - CACHEAR CON VERSIÓN
+# Si tiene ?v= en la URL, no cachear (forzar recarga)
 <FilesMatch "\.(css|js)$">
-    Header set Cache-Control "public, max-age=31536000"
-    Header set Vary "Accept-Encoding"
+    # Verificar si tiene parámetro de versión
+    <If "%{QUERY_STRING} =~ /v=/">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires 0
+    </If>
+    <Else>
+        Header set Cache-Control "public, max-age=31536000"
+        Header set Vary "Accept-Encoding"
+    </Else>
 </FilesMatch>
 
 # 🖼️ IMÁGENES - CACHEAR LARGO PLAZO

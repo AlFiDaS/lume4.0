@@ -7,9 +7,10 @@ export interface Props {
   slug: string;
   categoria: string;
   stock?: boolean;
+  productId?: string;
 }
 
-const { name, price, image, hoverImage, slug, categoria, stock = true } = Astro.props;
+const { name, price, image, hoverImage, slug, categoria, stock = true, productId = slug } = Astro.props;
 
 // 🖼️ VALIDACIÓN DE IMÁGENES (ARREGLADA)
 const hasValidImage = image && image !== '';
@@ -46,6 +47,17 @@ if (priceMatch) {
         onerror="this.onerror=null; this.src='/images/placeholder.svg';"
       />
     </a>
+    
+    <!-- ❤️ BOTÓN DE WISHLIST -->
+    <button 
+      class="wishlist-btn" 
+      data-wishlist-id={productId}
+      onclick={`event.preventDefault(); event.stopPropagation(); toggleWishlist('${productId}'); return false;`}
+      title="Agregar a favoritos"
+      aria-label="Agregar a favoritos"
+    >
+      🤍
+    </button>
     
     <!-- 🏷️ BADGE DE STOCK -->
     {!stock && (
@@ -164,6 +176,7 @@ if (priceMatch) {
     will-change: transform;
   }
 
+
   .sin-stock {
     position: absolute;
     top: var(--space-sm);
@@ -176,6 +189,7 @@ if (priceMatch) {
     font-weight: 600;
     box-shadow: var(--shadow-sm);
     backdrop-filter: blur(10px);
+    z-index: 1;
   }
 
   .info {

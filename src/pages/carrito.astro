@@ -26,9 +26,35 @@ import Breadcrumb from '../components/Breadcrumb.astro';
           <div class="carrito-sidebar">
             <div class="carrito-resumen">
               <h2>Resumen</h2>
+              
+              <!-- Campo de cupón -->
+              <div class="coupon-section">
+                <div class="coupon-input-group">
+                  <input 
+                    type="text" 
+                    id="coupon-code" 
+                    placeholder="Código de descuento"
+                    class="coupon-input"
+                  />
+                  <button type="button" id="btn-aplicar-cupon" class="btn-aplicar-cupon">
+                    Aplicar
+                  </button>
+                </div>
+                <div id="coupon-message" class="coupon-message"></div>
+                <div id="coupon-applied" class="coupon-applied" style="display: none;">
+                  <span id="coupon-code-display"></span>
+                  <button type="button" id="btn-remover-cupon" class="btn-remover-cupon">✕</button>
+                </div>
+              </div>
+              
               <div class="resumen-item">
                 <span>Subtotal:</span>
                 <span id="carrito-total">$0</span>
+              </div>
+              
+              <div class="resumen-item" id="descuento-item" style="display: none;">
+                <span>Descuento:</span>
+                <span id="descuento-amount" style="color: #28a745;">-$0</span>
               </div>
        
               <div class="resumen-item">
@@ -210,7 +236,12 @@ import Breadcrumb from '../components/Breadcrumb.astro';
       return parseInt(cleaned, 10) || 0;
     }
 
-    function renderCarrito() {
+    // Función para calcular precio de tarjeta desde precio de transferencia (redondeado al 100)
+    function calculateCardPriceFromTransfer(transferPrice) {
+      return Math.round((transferPrice * 1.25) / 100) * 100;
+    }
+
+    async function renderCarrito() {
       const carrito = getCarrito();
       contenedor.innerHTML = "";
       let totalCarrito = 0;
@@ -236,11 +267,6 @@ import Breadcrumb from '../components/Breadcrumb.astro';
 
       if (finalizarBtn) finalizarBtn.style.display = "inline-block";
       if (vaciarBtn) vaciarBtn.style.display = "inline-block";
-
-      // Función para calcular precio de tarjeta desde precio de transferencia (redondeado al 100)
-      function calculateCardPriceFromTransfer(transferPrice) {
-        return Math.round((transferPrice * 1.25) / 100) * 100;
-      }
 
       carrito.forEach((item) => {
         const card = document.createElement("div");
@@ -322,13 +348,45 @@ import Breadcrumb from '../components/Breadcrumb.astro';
         envioCalculado = Math.round(envioCosto * 0.8);
       }
       
-      let totalFinal = subtotalCalculado + envioCalculado;
+      // Aplicar descuento de cupón si existe (revalidar primero)
+      let descuentoCupon = 0;
+      const couponData = JSON.parse(localStorage.getItem('applied_coupon') || 'null');
+      if (couponData && couponData.valid) {
+        // Revalidar el cupón con el carrito actual
+        const isValid = await revalidarCupon(couponData.coupon.code, subtotalCalculado, carrito);
+        if (isValid) {
+          descuentoCupon = couponData.discount || 0;
+        } else {
+          // Si el cupón ya no es válido, removerlo
+          localStorage.removeItem('applied_coupon');
+          ocultarCuponAplicado();
+          mostrarMensajeCupon('El cupón ya no es válido para los productos en tu carrito', 'error');
+        }
+      }
+      
+      let totalFinal = subtotalCalculado + envioCalculado - descuentoCupon;
+      
+      // El total no puede ser negativo
+      if (totalFinal < 0) {
+        totalFinal = 0;
+      }
 
       // Formatear totales para visualización (con separadores de miles)
       carritoTotalEl.textContent = isTransferenciaDirecta 
         ? `$${subtotalCalculado.toLocaleString('es-AR')} (-25%)` 
         : `$${subtotalCalculado.toLocaleString('es-AR')}`;
       envioInfoEl.textContent = isTransferenciaDirecta ? `$${envioCalculado.toLocaleString('es-AR')} (-25%)` : envioTexto;
+      
+      // Mostrar descuento si hay cupón aplicado
+      const descuentoItem = document.getElementById('descuento-item');
+      const descuentoAmount = document.getElementById('descuento-amount');
+      if (descuentoCupon > 0) {
+        if (descuentoItem) descuentoItem.style.display = 'flex';
+        if (descuentoAmount) descuentoAmount.textContent = `-$${descuentoCupon.toLocaleString('es-AR')}`;
+      } else {
+        if (descuentoItem) descuentoItem.style.display = 'none';
+      }
+      
       totalEl.textContent = `$${totalFinal.toLocaleString('es-AR')}`;
       
       // Actualizar "Total a pagar" antes del botón
@@ -639,7 +697,22 @@ Gracias!`);
           envioCosto = 10500;
         }
         
-        const totalFinal = totalCarrito + envioCosto;
+        // Aplicar descuento del 25% al envío también (multiplicar por 0.8)
+        const envioConDescuento = Math.round(envioCosto * 0.8);
+        
+        // Aplicar descuento de cupón si existe
+        const couponData = JSON.parse(localStorage.getItem('applied_coupon') || 'null');
+        let descuentoCupon = 0;
+        if (couponData && couponData.valid) {
+          descuentoCupon = couponData.discount || 0;
+        }
+        
+        const totalFinal = totalCarrito + envioConDescuento - descuentoCupon;
+        
+        // El total no puede ser negativo
+        if (totalFinal < 0) {
+          totalFinal = 0;
+        }
         
         // Preparar FormData
         const formData = new FormData();
@@ -721,15 +794,223 @@ Gracias!`);
       }
 
       saveCarrito(carrito);
-      renderCarrito();
+      
+      // Revalidar cupón si existe antes de renderizar
+      const couponData = JSON.parse(localStorage.getItem('applied_coupon') || 'null');
+      if (couponData && couponData.valid) {
+        // Calcular total para revalidación
+        let totalCarrito = 0;
+        carrito.forEach((item) => {
+          const transferPriceValue = extractPriceValue(item.price);
+          const cardPriceValue = calculateCardPriceFromTransfer(transferPriceValue);
+          totalCarrito += cardPriceValue * item.cantidad;
+        });
+        const pago = document.getElementById('pago')?.value || '';
+        if (pago === 'transferencia_directa') {
+          totalCarrito = 0;
+          carrito.forEach((item) => {
+            const transferPriceValue = extractPriceValue(item.price);
+            totalCarrito += transferPriceValue * item.cantidad;
+          });
+        }
+        // Revalidar asíncronamente
+        revalidarCupon(couponData.coupon.code, totalCarrito, carrito).then(isValid => {
+          if (!isValid) {
+            localStorage.removeItem('applied_coupon');
+            ocultarCuponAplicado();
+            mostrarMensajeCupon('El cupón ya no es válido para los productos en tu carrito', 'error');
+          }
+          renderCarrito();
+        });
+      } else {
+        renderCarrito();
+      }
     });
 
     vaciarBtn.addEventListener("click", () => {
       if (confirm("¿Seguro que querés vaciar el carrito?")) {
         saveCarrito([]);
+        // Remover cupón si se vacía el carrito
+        localStorage.removeItem('applied_coupon');
+        ocultarCuponAplicado();
+        mostrarMensajeCupon('', '');
         renderCarrito();
       }
     });
+
+    // Función para aplicar cupón
+    async function aplicarCupon() {
+      const code = document.getElementById('coupon-code')?.value.trim().toUpperCase();
+      if (!code) {
+        mostrarMensajeCupon('Ingresa un código de cupón', 'error');
+        return;
+      }
+      
+      const carrito = getCarrito();
+      if (carrito.length === 0) {
+        mostrarMensajeCupon('El carrito está vacío', 'error');
+        return;
+      }
+      
+      // Calcular total del carrito
+      let totalCarrito = 0;
+      carrito.forEach((item) => {
+        const transferPriceValue = extractPriceValue(item.price);
+        const cardPriceValue = calculateCardPriceFromTransfer(transferPriceValue);
+        totalCarrito += cardPriceValue * item.cantidad;
+      });
+      
+      const pago = document.getElementById('pago')?.value || '';
+      if (pago === 'transferencia_directa') {
+        // Recalcular con precios de transferencia
+        totalCarrito = 0;
+        carrito.forEach((item) => {
+          const transferPriceValue = extractPriceValue(item.price);
+          totalCarrito += transferPriceValue * item.cantidad;
+        });
+      }
+      
+      // Preparar items para validación
+      const items = carrito.map(item => ({
+        slug: item.slug,
+        categoria: item.categoria,
+        id: item.slug // Usar slug como ID para validación
+      }));
+      
+      try {
+        const response = await fetch('/api/coupons/validate.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            code: code,
+            total_amount: totalCarrito,
+            items: items
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.valid) {
+          // Guardar cupón aplicado
+          localStorage.setItem('applied_coupon', JSON.stringify(data));
+          mostrarCuponAplicado(data.coupon.code, data.discount);
+          mostrarMensajeCupon(data.message, 'success');
+          renderCarrito(); // Recalcular totales
+        } else {
+          mostrarMensajeCupon(data.message || 'Código de cupón no válido', 'error');
+          localStorage.removeItem('applied_coupon');
+          ocultarCuponAplicado();
+        }
+      } catch (error) {
+        console.error('Error al validar cupón:', error);
+        mostrarMensajeCupon('Error al validar el cupón. Por favor, intenta nuevamente.', 'error');
+      }
+    }
+    
+    // Función para revalidar cupón con el carrito actual
+    async function revalidarCupon(code, totalAmount, carrito) {
+      if (!code || !carrito || carrito.length === 0) {
+        return false;
+      }
+      
+      // Preparar items para validación
+      const items = carrito.map(item => ({
+        slug: item.slug,
+        categoria: item.categoria,
+        id: item.slug
+      }));
+      
+      try {
+        const response = await fetch('/api/coupons/validate.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            code: code,
+            total_amount: totalAmount,
+            items: items
+          })
+        });
+        
+        const data = await response.json();
+        return data.success && data.valid;
+      } catch (error) {
+        console.error('Error al revalidar cupón:', error);
+        return false;
+      }
+    }
+    
+    // Función para remover cupón
+    function removerCupon() {
+      localStorage.removeItem('applied_coupon');
+      ocultarCuponAplicado();
+      mostrarMensajeCupon('', '');
+      const couponInput = document.getElementById('coupon-code');
+      if (couponInput) couponInput.value = '';
+      renderCarrito(); // Recalcular totales
+    }
+    
+    // Función para mostrar mensaje de cupón
+    function mostrarMensajeCupon(message, type) {
+      const messageEl = document.getElementById('coupon-message');
+      if (!messageEl) return;
+      
+      if (!message) {
+        messageEl.textContent = '';
+        messageEl.className = 'coupon-message';
+        return;
+      }
+      
+      messageEl.textContent = message;
+      messageEl.className = `coupon-message ${type}`;
+    }
+    
+    // Función para mostrar cupón aplicado
+    function mostrarCuponAplicado(code, discount) {
+      const appliedEl = document.getElementById('coupon-applied');
+      const codeDisplay = document.getElementById('coupon-code-display');
+      if (appliedEl) appliedEl.style.display = 'flex';
+      if (codeDisplay) codeDisplay.textContent = `Cupón: ${code} (-$${discount.toLocaleString('es-AR')})`;
+    }
+    
+    // Función para ocultar cupón aplicado
+    function ocultarCuponAplicado() {
+      const appliedEl = document.getElementById('coupon-applied');
+      if (appliedEl) appliedEl.style.display = 'none';
+    }
+    
+    // Event listeners para cupón
+    document.addEventListener('click', (e) => {
+      if (e.target.id === 'btn-aplicar-cupon' || e.target.closest('#btn-aplicar-cupon')) {
+        e.preventDefault();
+        e.stopPropagation();
+        aplicarCupon();
+      }
+      if (e.target.id === 'btn-remover-cupon' || e.target.closest('#btn-remover-cupon')) {
+        e.preventDefault();
+        e.stopPropagation();
+        removerCupon();
+      }
+    });
+    
+    // Aplicar cupón con Enter (usar delegación de eventos para que funcione siempre)
+    document.addEventListener('keypress', (e) => {
+      if (e.target.id === 'coupon-code' && e.key === 'Enter') {
+        e.preventDefault();
+        aplicarCupon();
+      }
+    });
+    
+    // Cargar cupón aplicado al iniciar (después de que el DOM esté listo)
+    setTimeout(() => {
+      const couponData = JSON.parse(localStorage.getItem('applied_coupon') || 'null');
+      if (couponData && couponData.valid) {
+        mostrarCuponAplicado(couponData.coupon.code, couponData.discount);
+      }
+    }, 100);
 
     document.getElementById("form-datos").addEventListener("input", renderCarrito);
     document.getElementById("pago").addEventListener("change", renderCarrito);

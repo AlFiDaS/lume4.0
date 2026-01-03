@@ -109,7 +109,9 @@
         
         // Guardar el precio de transferencia original en el carrito (no el precio de tarjeta)
         // Esto permite calcular correctamente los descuentos sin errores de redondeo
-        const stockButton = product.stock ? 
+        // Stock disponible si es NULL (ilimitado) o > 0 (limitado)
+        const hasStock = product.stock === null || product.stock > 0;
+        const stockButton = hasStock ? 
             `<button 
                 class="btn-agregar" 
                 onclick="agregarAlCarrito('${escapeHtml(product.name)}', '${escapeHtml(product.price)}', '${escapeHtml(imageSrc)}', '${escapeHtml(product.slug)}', '${escapeHtml(product.categoria)}')"
@@ -165,7 +167,7 @@
                     </div>
                     <div class="header-badges">
                         <span class="categoria">${categoriaName}</span>
-                        ${!product.stock ? '<span class="badge-sin-stock">Sin stock</span>' : ''}
+                        ${!hasStock ? '<span class="badge-sin-stock">Sin stock</span>' : ''}
                     </div>
                 </div>
                 
@@ -212,6 +214,14 @@
                 </div>
                 
                 <div class="producto-actions">
+                    <button 
+                        class="wishlist-btn-detail" 
+                        data-wishlist-id="${escapeHtml(product.id)}"
+                        onclick="toggleWishlist('${escapeHtml(product.id)}')"
+                        title="Agregar a favoritos"
+                    >
+                        🤍 Agregar a favoritos
+                    </button>
                     ${stockButton}
                     <a href="/${product.categoria}" class="btn-volver">
                         ← Volver al catálogo
@@ -352,6 +362,16 @@
                 }
                 
                 renderProductDetail(product, container);
+                
+                // Actualizar estado del botón de wishlist después de renderizar
+                if (window.isInWishlist && product.id) {
+                    setTimeout(async () => {
+                        const isIn = await window.isInWishlist(product.id);
+                        if (isIn && window.updateWishlistButtons) {
+                            window.updateWishlistButtons(product.id, true);
+                        }
+                    }, 500);
+                }
                 
             } catch (error) {
                 showError(container, error.message || 'Error desconocido');

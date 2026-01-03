@@ -4,54 +4,76 @@
  */
 $pageTitle = 'Dashboard';
 require_once '../config.php';
+require_once '../helpers/stats.php';
+require_once '../helpers/stock.php';
 require_once '_inc/header.php';
 
-// Obtener estadísticas
-$totalProducts = fetchOne("SELECT COUNT(*) as count FROM products");
-$visibleProducts = fetchOne("SELECT COUNT(*) as count FROM products WHERE visible = 1");
-$destacadosProducts = fetchOne("SELECT COUNT(*) as count FROM products WHERE destacado = 1 AND visible = 1");
-$outOfStock = fetchOne("SELECT COUNT(*) as count FROM products WHERE stock = 0");
+// Obtener estadísticas del dashboard
+$dashboardStats = getDashboardStats();
 
-$stats = [
-    'total' => $totalProducts['count'] ?? 0,
-    'visible' => $visibleProducts['count'] ?? 0,
-    'destacados' => $destacadosProducts['count'] ?? 0,
-    'sin_stock' => $outOfStock['count'] ?? 0
-];
+// Obtener productos con stock bajo
+$lowStockProducts = getLowStockProducts();
 
-// Obtener productos recientes
-$recentProducts = fetchAll(
-    "SELECT id, name, categoria, visible, stock, created_at 
-     FROM products 
-     ORDER BY created_at DESC 
-     LIMIT 5"
-);
+// Obtener productos más vendidos
+$topProducts = getTopSellingProducts(5, 'month');
+
+// Obtener ventas por día (últimos 7 días)
+$salesByDay = getSalesByDay();
 ?>
 
 <div class="admin-content">
     <h2>Dashboard</h2>
     <p style="color: #666; margin-bottom: 2rem;">Bienvenido al panel de administración de LUME</p>
     
-    <!-- Estadísticas principales -->
+    <!-- Estadísticas de Ventas -->
+    <div class="section-title">📊 Ventas</div>
+    <div class="stats-grid">
+        <div class="stat-card stat-sales">
+            <div class="stat-number">$<?= number_format($dashboardStats['today']['total_revenue'], 2, ',', '.') ?></div>
+            <div class="stat-label">Ventas de Hoy</div>
+            <div class="stat-subtitle"><?= $dashboardStats['today']['total_orders'] ?> pedidos</div>
+        </div>
+        
+        <div class="stat-card stat-month">
+            <div class="stat-number">$<?= number_format($dashboardStats['month']['total_revenue'], 2, ',', '.') ?></div>
+            <div class="stat-label">Ventas del Mes</div>
+            <div class="stat-subtitle"><?= $dashboardStats['month']['total_orders'] ?> pedidos</div>
+        </div>
+        
+        <div class="stat-card stat-pending">
+            <div class="stat-number"><?= $dashboardStats['pending_orders'] ?></div>
+            <div class="stat-label">Pendientes</div>
+            <div class="stat-subtitle">Órdenes por procesar</div>
+        </div>
+        
+        <div class="stat-card stat-confirm">
+            <div class="stat-number"><?= $dashboardStats['orders_to_confirm'] ?></div>
+            <div class="stat-label">A Confirmar</div>
+            <div class="stat-subtitle">Pagos pendientes</div>
+        </div>
+    </div>
+    
+    <!-- Estadísticas de Productos -->
+    <div class="section-title">📦 Productos</div>
     <div class="stats-grid">
         <div class="stat-card stat-total">
-            <div class="stat-number"><?= $stats['total'] ?></div>
-            <div class="stat-label">Total</div>
+            <div class="stat-number"><?= $dashboardStats['total_products'] ?></div>
+            <div class="stat-label">Total Productos</div>
         </div>
         
-        <div class="stat-card stat-visible">
-            <div class="stat-number"><?= $stats['visible'] ?></div>
-            <div class="stat-label">Visibles</div>
+        <div class="stat-card stat-low-stock">
+            <div class="stat-number"><?= $dashboardStats['low_stock_products'] ?></div>
+            <div class="stat-label">Stock Bajo</div>
         </div>
         
-        <div class="stat-card stat-destacados">
-            <div class="stat-number"><?= $stats['destacados'] ?></div>
-            <div class="stat-label">Destacados</div>
-        </div>
-        
-        <div class="stat-card stat-stock">
-            <div class="stat-number"><?= $stats['sin_stock'] ?></div>
+        <div class="stat-card stat-no-stock">
+            <div class="stat-number"><?= $dashboardStats['no_stock_products'] ?></div>
             <div class="stat-label">Sin Stock</div>
+        </div>
+        
+        <div class="stat-card stat-avg">
+            <div class="stat-number">$<?= number_format($dashboardStats['month']['avg_order_value'], 2, ',', '.') ?></div>
+            <div class="stat-label">Ticket Promedio</div>
         </div>
     </div>
     
@@ -85,13 +107,63 @@ $recentProducts = fetchAll(
         </div>
     </div>
     
+    <!-- Productos Más Vendidos -->
+    <?php if (!empty($topProducts)): ?>
+    <div class="top-products-section">
+        <h3 class="section-title">🏆 Productos Más Vendidos (Este Mes)</h3>
+        <div class="top-products-list">
+            <?php foreach ($topProducts as $index => $product): ?>
+                <div class="top-product-item">
+                    <div class="product-rank">#<?= $index + 1 ?></div>
+                    <div class="product-image">
+                        <?php if (!empty($product['image'])): ?>
+                            <img src="<?= htmlspecialchars($product['image']) ?>" alt="<?= htmlspecialchars($product['name']) ?>" onerror="this.style.display='none'">
+                        <?php else: ?>
+                            <div class="no-image">📦</div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="product-info">
+                        <div class="product-name"><?= htmlspecialchars($product['name']) ?></div>
+                        <div class="product-stats">
+                            <span class="stat-badge"><?= (int)$product['total_sold'] ?> vendidos</span>
+                            <span class="stat-badge revenue">$<?= number_format((float)($product['total_revenue'] ?? 0), 2, ',', '.') ?></span>
+                        </div>
+                    </div>
+                    <a href="edit.php?id=<?= htmlspecialchars($product['id']) ?>" class="product-link">Ver →</a>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php endif; ?>
+    
+    <!-- Alertas de Stock Bajo -->
+    <?php if (!empty($lowStockProducts)): ?>
+    <div class="low-stock-section">
+        <h3 class="section-title">⚠️ Alertas de Stock Bajo</h3>
+        <div class="low-stock-list">
+            <?php foreach ($lowStockProducts as $product): ?>
+                <div class="low-stock-item">
+                    <div class="stock-info">
+                        <div class="product-name"><?= htmlspecialchars($product['name']) ?></div>
+                        <div class="stock-details">
+                            <span class="stock-badge low">Stock: <?= $product['stock'] ?></span>
+                            <span class="stock-badge min">Mínimo: <?= $product['stock_minimo'] ?></span>
+                        </div>
+                    </div>
+                    <a href="edit.php?id=<?= htmlspecialchars($product['id']) ?>" class="stock-link">Actualizar Stock →</a>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php endif; ?>
+    
     <!-- Resumen por categoría -->
     <?php
     $categorias = fetchAll("SELECT categoria, COUNT(*) as count FROM products GROUP BY categoria");
     if (!empty($categorias)):
     ?>
     <div class="category-summary">
-        <h3 class="section-title">Productos por Categoría</h3>
+        <h3 class="section-title">📁 Productos por Categoría</h3>
         <div class="category-grid">
             <?php foreach ($categorias as $cat): ?>
                 <div class="category-item">
@@ -141,9 +213,39 @@ $recentProducts = fetchAll(
         border-left: 4px solid #f093fb;
     }
     
-    .stat-stock {
-        background: linear-gradient(135deg, #fff5e6, #ffe6d9);
-        border-left: 4px solid #fa709a;
+    .stat-sales {
+        background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+        border-left: 4px solid #4caf50;
+    }
+    
+    .stat-month {
+        background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+        border-left: 4px solid #2196f3;
+    }
+    
+    .stat-pending {
+        background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+        border-left: 4px solid #ff9800;
+    }
+    
+    .stat-confirm {
+        background: linear-gradient(135deg, #fce4ec, #f8bbd0);
+        border-left: 4px solid #e91e63;
+    }
+    
+    .stat-low-stock {
+        background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+        border-left: 4px solid #ff9800;
+    }
+    
+    .stat-no-stock {
+        background: linear-gradient(135deg, #ffebee, #ffcdd2);
+        border-left: 4px solid #f44336;
+    }
+    
+    .stat-avg {
+        background: linear-gradient(135deg, #f3e5f5, #e1bee7);
+        border-left: 4px solid #9c27b0;
     }
     
     .stat-number {
@@ -157,6 +259,141 @@ $recentProducts = fetchAll(
         font-size: 0.85rem;
         color: #666;
         font-weight: 500;
+    }
+    
+    .stat-subtitle {
+        font-size: 0.75rem;
+        color: #999;
+        margin-top: 0.25rem;
+    }
+    
+    .top-products-section,
+    .low-stock-section {
+        margin-top: 3rem;
+    }
+    
+    .top-products-list,
+    .low-stock-list {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .top-product-item,
+    .low-stock-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .top-product-item:last-child,
+    .low-stock-item:last-child {
+        border-bottom: none;
+    }
+    
+    .product-rank {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #e0a4ce;
+        min-width: 40px;
+        text-align: center;
+    }
+    
+    .product-image {
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #f5f5f5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .no-image {
+        font-size: 2rem;
+    }
+    
+    .product-info {
+        flex: 1;
+    }
+    
+    .product-name {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+    
+    .product-stats {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .stat-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        background: #f0f0f0;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        color: #666;
+    }
+    
+    .stat-badge.revenue {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+    
+    .stock-info {
+        flex: 1;
+    }
+    
+    .stock-details {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .stock-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .stock-badge.low {
+        background: #fff3e0;
+        color: #e65100;
+    }
+    
+    .stock-badge.min {
+        background: #f3e5f5;
+        color: #6a1b9a;
+    }
+    
+    .product-link,
+    .stock-link {
+        color: #e0a4ce;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s;
+    }
+    
+    .product-link:hover,
+    .stock-link:hover {
+        color: #d89bc0;
+        text-decoration: underline;
     }
     
     .section-title {

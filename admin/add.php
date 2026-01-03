@@ -31,7 +31,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'descripcion' => sanitize($_POST['descripcion'] ?? ''),
             'price' => sanitize($_POST['price'] ?? ''),
             'categoria' => sanitize($_POST['categoria'] ?? 'productos'),
-            'stock' => isset($_POST['stock']) ? 1 : 0,
+            'stock_type' => $_POST['stock_type'] ?? 'unlimited',
+            'stock_quantity' => !empty($_POST['stock_quantity']) ? (int)$_POST['stock_quantity'] : null,
+            'stock_minimo' => !empty($_POST['stock_minimo']) ? (int)$_POST['stock_minimo'] : 5,
             'destacado' => isset($_POST['destacado']) ? 1 : 0,
             'visible' => isset($_POST['visible']) ? 1 : 1  // Por defecto visible = 1
         ];
@@ -97,11 +99,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 
                 if (empty($error)) {
+                    // Determinar stock según el tipo
+                    if ($formData['stock_type'] === 'limited' && $formData['stock_quantity'] !== null) {
+                        $stockValue = max(0, $formData['stock_quantity']);
+                    } else {
+                        $stockValue = null; // Ilimitado por defecto
+                    }
+                    
                     // Insertar en BD
                     $sql = "INSERT INTO products 
-                            (id, slug, name, descripcion, price, image, hoverImage, stock, destacado, categoria, visible) 
+                            (id, slug, name, descripcion, price, image, hoverImage, stock, stock_minimo, destacado, categoria, visible) 
                             VALUES 
-                            (:id, :slug, :name, :descripcion, :price, :image, :hoverImage, :stock, :destacado, :categoria, :visible)";
+                            (:id, :slug, :name, :descripcion, :price, :image, :hoverImage, :stock, :stock_minimo, :destacado, :categoria, :visible)";
                     
                     $params = [
                         'id' => $productId,
@@ -111,7 +120,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'price' => $formData['price'],
                         'image' => $imagePath,
                         'hoverImage' => $hoverImagePath,
-                        'stock' => $formData['stock'],
+                        'stock' => $stockValue,
+                        'stock_minimo' => $formData['stock_minimo'],
                         'destacado' => $formData['destacado'],
                         'categoria' => $formData['categoria'],
                         'visible' => $formData['visible']
@@ -217,9 +227,37 @@ $csrfToken = generateCSRFToken();
         
         <div class="form-group">
             <div class="checkbox-group">
-                <input type="checkbox" id="stock" name="stock" 
-                       <?= ($formData['stock'] ?? 1) ? 'checked' : '' ?>>
-                <label for="stock">En Stock</label>
+            <label>Stock</label>
+            <div style="margin-bottom: 0.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <input type="radio" name="stock_type" value="unlimited" checked
+                           onchange="updateStockFields()">
+                    <span>Ilimitado (producto hecho bajo pedido) - Por defecto</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="radio" name="stock_type" value="limited" 
+                           onchange="updateStockFields()">
+                    <span>Limitado</span>
+                </label>
+            </div>
+            <div id="stock-limited-fields" style="display: none; margin-top: 0.5rem;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label for="stock_quantity">Cantidad en Stock</label>
+                        <input type="number" id="stock_quantity" name="stock_quantity" 
+                               min="0" step="1"
+                               value="<?= htmlspecialchars($formData['stock_quantity'] ?? '') ?>"
+                               placeholder="0">
+                    </div>
+                    <div>
+                        <label for="stock_minimo">Stock Mínimo (alerta)</label>
+                        <input type="number" id="stock_minimo" name="stock_minimo" 
+                               min="0" step="1"
+                               value="<?= htmlspecialchars($formData['stock_minimo'] ?? 5) ?>"
+                               placeholder="5">
+                    </div>
+                </div>
+            </div>
             </div>
         </div>
         
@@ -356,6 +394,12 @@ document.getElementById('hoverImage').addEventListener('change', function(e) {
         reader.readAsDataURL(file);
     }
 });
+
+function updateStockFields() {
+    const stockType = document.querySelector('input[name="stock_type"]:checked').value;
+    const limitedFields = document.getElementById('stock-limited-fields');
+    limitedFields.style.display = stockType === 'limited' ? 'block' : 'none';
+}
 </script>
 
 <?php require_once '_inc/footer.php'; ?>

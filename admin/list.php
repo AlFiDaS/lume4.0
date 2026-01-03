@@ -40,8 +40,14 @@ if ($visible !== '') {
 }
 
 if ($stock !== '') {
-    $sql .= " AND stock = :stock";
-    $params['stock'] = (int)$stock;
+    if ($stock === 'unlimited') {
+        $sql .= " AND stock IS NULL";
+    } elseif ($stock === 'limited') {
+        $sql .= " AND stock IS NOT NULL AND stock > 0";
+    } else {
+        $sql .= " AND stock = :stock";
+        $params['stock'] = (int)$stock;
+    }
 }
 
 // Ordenamiento: primero por orden (si existe), luego destacado, luego nombre
@@ -138,7 +144,8 @@ if (!empty($buscar)) {
                 <label>Stock</label>
                 <select name="stock">
                     <option value="">Todos</option>
-                    <option value="1" <?= $stock === '1' ? 'selected' : '' ?>>En Stock</option>
+                    <option value="unlimited" <?= $stock === 'unlimited' ? 'selected' : '' ?>>Ilimitado</option>
+                    <option value="limited" <?= $stock === 'limited' ? 'selected' : '' ?>>Limitado</option>
                     <option value="0" <?= $stock === '0' ? 'selected' : '' ?>>Sin Stock</option>
                 </select>
             </div>
@@ -256,10 +263,12 @@ if (!empty($buscar)) {
                                 <input type="checkbox" 
                                        class="editable-stock" 
                                        data-id="<?= htmlspecialchars($product['id']) ?>"
-                                       <?= $product['stock'] ? 'checked' : '' ?>
+                                       <?= ($product['stock'] === null || $product['stock'] > 0) ? 'checked' : '' ?>
                                        style="display: none;">
-                                <?php if ($product['stock']): ?>
-                                    <span class="badge badge-success">En Stock</span>
+                                <?php if ($product['stock'] === null): ?>
+                                    <span class="badge badge-info">Ilimitado</span>
+                                <?php elseif ($product['stock'] > 0): ?>
+                                    <span class="badge badge-success"><?= (int)$product['stock'] ?> unidades</span>
                                 <?php else: ?>
                                     <span class="badge badge-danger">Sin Stock</span>
                                 <?php endif; ?>
@@ -296,10 +305,12 @@ if (!empty($buscar)) {
                                 <input type="checkbox" 
                                        class="editable-stock" 
                                        data-id="<?= htmlspecialchars($product['id']) ?>"
-                                       <?= $product['stock'] ? 'checked' : '' ?>
+                                       <?= ($product['stock'] === null || $product['stock'] > 0) ? 'checked' : '' ?>
                                        style="display: none;">
-                                <?php if ($product['stock']): ?>
-                                    <span class="badge badge-success">En Stock</span>
+                                <?php if ($product['stock'] === null): ?>
+                                    <span class="badge badge-info">Ilimitado</span>
+                                <?php elseif ($product['stock'] > 0): ?>
+                                    <span class="badge badge-success"><?= (int)$product['stock'] ?> unidades</span>
                                 <?php else: ?>
                                     <span class="badge badge-danger">Sin Stock</span>
                                 <?php endif; ?>
@@ -509,9 +520,12 @@ if (!empty($buscar)) {
             
             updateField(productId, 'stock', newValue, function(success) {
                 if (success) {
+                    // El backend devuelve el nuevo valor de stock
+                    // Si es null, mostrar "Ilimitado", si > 0 mostrar cantidad, si 0 mostrar "Sin Stock"
+                    // Por ahora, simplificamos: si está checked = disponible
                     if (newValue) {
-                        badge.className = 'badge badge-success';
-                        badge.textContent = 'En Stock';
+                        badge.className = 'badge badge-info';
+                        badge.textContent = 'Ilimitado';
                     } else {
                         badge.className = 'badge badge-danger';
                         badge.textContent = 'Sin Stock';

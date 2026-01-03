@@ -32,15 +32,23 @@ const staticLinksAfter = [
         ))}
       </ul>
 
+      <a href="/wishlist" class="wishlist-icon desktop-wishlist" title="Mis Favoritos">
+        ❤️ <span id="wishlist-count">0</span>
+      </a>
       <a href="/carrito" class="carrito-icon desktop-cart">
         🛒 <span id="cart-count">0</span>
       </a>
     </div>
 
-    <!-- Carrito en mobile (separado) -->
-    <a href="/carrito" class="carrito-icon mobile-cart">
-      🛒 <span id="cart-count-mobile">0</span>
-    </a>
+    <!-- Wishlist y Carrito en mobile (separado) -->
+    <div class="mobile-icons">
+      <a href="/wishlist" class="wishlist-icon mobile-wishlist" title="Mis Favoritos">
+        ❤️ <span id="wishlist-count-mobile">0</span>
+      </a>
+      <a href="/carrito" class="carrito-icon mobile-cart">
+        🛒 <span id="cart-count-mobile">0</span>
+      </a>
+    </div>
   </div>
 
   <!-- Menú desplegable en mobile -->
@@ -232,15 +240,29 @@ const staticLinksAfter = [
     display: none;
   }
 
-  .carrito-icon {
+  .carrito-icon,
+  .wishlist-icon {
     position: relative;
     font-size: 1.4rem;
     text-decoration: none;
     color: #333;
   }
 
+  .nav-desktop-right .wishlist-icon,
+  .nav-desktop-right .carrito-icon {
+    margin-left: 1rem;
+  }
+
+  .mobile-icons {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
    #cart-count,
-  #cart-count-mobile {
+  #cart-count-mobile,
+  #wishlist-count,
+  #wishlist-count-mobile {
     background: #e0a4ce;
     color: white;
     font-size: 0.75rem;
@@ -294,8 +316,14 @@ const staticLinksAfter = [
       display: none;
     }
 
-    .mobile-cart {
+    .mobile-cart,
+    .mobile-wishlist {
       display: block;
+    }
+
+    .desktop-wishlist,
+    .desktop-cart {
+      display: none !important;
     }
 
     .nav-links.desktop {
@@ -359,7 +387,9 @@ const staticLinksAfter = [
     }
 
     .nav-links.mobile,
-    .mobile-cart {
+    .mobile-cart,
+    .mobile-wishlist,
+    .mobile-icons {
       display: none !important;
     }
   }

@@ -110,9 +110,12 @@
      * @returns {string} HTML del producto
      */
     function renderProductCard(product) {
-        const stockClass = !product.stock ? 'sin-stock' : '';
-        const stockText = !product.stock ? 'Sin stock' : 'Agregar al carrito';
-        const disabledAttr = !product.stock ? 'disabled' : '';
+        // Stock disponible si es NULL (ilimitado) o > 0 (limitado)
+        // Stock no disponible solo si es 0
+        const hasStock = product.stock === null || product.stock > 0;
+        const stockClass = !hasStock ? 'sin-stock' : '';
+        const stockText = !hasStock ? 'Sin stock' : 'Agregar al carrito';
+        const disabledAttr = !hasStock ? 'disabled' : '';
         
         // Validar y sanitizar URLs de imágenes
         const placeholderPath = '/images/placeholder.svg';
@@ -149,6 +152,8 @@
             </div>
         ` : '<p class="price">N/A</p>';
         
+        const productId = product.id || product.slug;
+        
         return `
             <div class="product-card">
                 <div class="image-container">
@@ -164,7 +169,16 @@
                             onerror="if(this.src!=='${placeholderPath}'){this.onerror=null;this.src='${placeholderPath}';}else{this.style.display='none';}"
                         />
                     </a>
-                    ${!product.stock ? '<div class="sin-stock">Sin stock</div>' : ''}
+                    <button 
+                        class="wishlist-btn" 
+                        data-wishlist-id="${escapeHtml(productId)}"
+                        onclick="event.preventDefault(); event.stopPropagation(); toggleWishlist('${escapeHtml(productId)}'); return false;"
+                        title="Agregar a favoritos"
+                        aria-label="Agregar a favoritos"
+                    >
+                        🤍
+                    </button>
+                    ${!hasStock ? '<div class="sin-stock">Sin stock</div>' : ''}
                 </div>
                 
                 <div class="info">
@@ -226,6 +240,13 @@
         });
         
         container.innerHTML = html;
+        
+        // Actualizar estados de wishlist después de renderizar
+        if (window.loadWishlistStates && typeof window.loadWishlistStates === 'function') {
+            setTimeout(() => {
+                window.loadWishlistStates();
+            }, 100);
+        }
     }
     
     /**

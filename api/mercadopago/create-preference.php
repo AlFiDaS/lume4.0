@@ -134,6 +134,26 @@ try {
         $totalAmount += $envioCosto;
     }
     
+    // Aplicar descuento de cupón si existe
+    $couponCode = $data['coupon_code'] ?? null;
+    $discountAmount = (float)($data['discount_amount'] ?? 0);
+    
+    if ($couponCode && $discountAmount > 0) {
+        // Agregar descuento como item negativo (MercadoPago permite esto)
+        $preferenceItems[] = [
+            'title' => 'Descuento (Cupón: ' . $couponCode . ')',
+            'quantity' => 1,
+            'unit_price' => -$discountAmount, // Negativo para descuento
+            'currency_id' => 'ARS'
+        ];
+        $totalAmount -= $discountAmount;
+        
+        // El total no puede ser negativo
+        if ($totalAmount < 0) {
+            $totalAmount = 0;
+        }
+    }
+    
     // Preparar datos de envío (ya calculado arriba)
     $shippingType = $data['shipping']['type'] ?? '';
     $shippingAddress = '';

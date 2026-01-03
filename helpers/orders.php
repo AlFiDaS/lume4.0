@@ -22,6 +22,10 @@ if (!function_exists('executeQuery')) {
  * @return int|false ID de la orden insertada o false en caso de error
  */
 function saveOrder($orderData) {
+    // Verificar si las columnas de cupón existen
+    $checkCouponColumns = fetchOne("SHOW COLUMNS FROM orders LIKE 'coupon_code'");
+    $hasCouponColumns = !empty($checkCouponColumns);
+    
     $sql = "INSERT INTO orders (
         mercadopago_id,
         preference_id,
@@ -40,7 +44,7 @@ function saveOrder($orderData) {
         shipping_type,
         shipping_address,
         notes,
-        metadata
+        metadata" . ($hasCouponColumns ? ", coupon_code, discount_amount" : "") . "
     ) VALUES (
         :mercadopago_id,
         :preference_id,
@@ -59,7 +63,7 @@ function saveOrder($orderData) {
         :shipping_type,
         :shipping_address,
         :notes,
-        :metadata
+        :metadata" . ($hasCouponColumns ? ", :coupon_code, :discount_amount" : "") . "
     )";
     
     $params = [
@@ -83,8 +87,54 @@ function saveOrder($orderData) {
         'metadata' => is_array($orderData['metadata']) ? json_encode($orderData['metadata']) : ($orderData['metadata'] ?? null)
     ];
     
+    if ($hasCouponColumns) {
+        $params['coupon_code'] = $orderData['coupon_code'] ?? null;
+        $params['discount_amount'] = $orderData['discount_amount'] ?? null;
+    }
+    
     if (executeQuery($sql, $params)) {
         $orderId = lastInsertId();
+        
+        // Registrar uso de cupón si existe
+        if ($orderId && !empty($orderData['coupon_code'] ?? null)) {
+            try {
+                require_once __DIR__ . '/coupons.php';
+                if (function_exists('useCoupon')) {
+                    useCoupon($orderData['coupon_code']);
+                }
+            } catch (Exception $e) {
+                // Si falla registrar el uso del cupón, no es crítico
+                error_log('No se pudo registrar el uso del cupón: ' . $e->getMessage());
+            }
+        }
+        
+        // Descontar stock automáticamente si la orden se crea con status 'approved' o 'a_confirmar'
+        if ($orderId && in_array($orderData['status'] ?? '', ['approved', 'a_confirmar'])) {
+            try {
+                require_once __DIR__ . '/stock.php';
+                $items = is_array($orderData['items']) ? $orderData['items'] : json_decode($orderData['items'] ?? '[]', true);
+                
+                if ($items && is_array($items)) {
+                    foreach ($items as $item) {
+                        $slug = $item['slug'] ?? '';
+                        $quantity = (int)($item['cantidad'] ?? 0);
+                        
+                        if (!empty($slug) && $quantity > 0) {
+                            // Buscar producto por slug
+                            $productSql = "SELECT id FROM products WHERE slug = :slug";
+                            $product = fetchOne($productSql, ['slug' => $slug]);
+                            
+                            if ($product && isset($product['id'])) {
+                                decreaseStock($product['id'], $quantity, $orderId);
+                            }
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                // No fallar si el stock falla, solo loguear el error
+                error_log('Error al descontar stock: ' . $e->getMessage());
+            }
+        }
         
         // Enviar notificación a Telegram
         if ($orderId) {
@@ -121,7 +171,8 @@ function updateOrder($orderId, $orderData) {
         'mercadopago_id', 'preference_id', 'external_reference', 'status', 'status_detail',
         'payer_name', 'payer_email', 'payer_phone', 'payer_document', 'proof_image',
         'items', 'total_amount', 'payment_method', 'payment_type',
-        'shipping_type', 'shipping_address', 'notes', 'metadata'
+        'shipping_type', 'shipping_address', 'notes', 'metadata',
+        'coupon_code', 'discount_amount', 'customer_id'
     ];
     
     foreach ($allowedFields as $field) {

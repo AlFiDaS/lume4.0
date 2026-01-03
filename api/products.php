@@ -85,10 +85,16 @@ try {
     
     // Filtro por stock
     if (isset($_GET['stock'])) {
-        $stock = (int)$_GET['stock'];
-        if ($stock === 1 || $stock === 0) {
-            $sql .= " AND stock = :stock";
-            $params['stock'] = $stock;
+        $stock = $_GET['stock'];
+        if ($stock === 'available') {
+            // Solo productos con stock disponible (ilimitado o > 0)
+            $sql .= " AND (stock IS NULL OR stock > 0)";
+        } elseif ($stock === 'unlimited') {
+            $sql .= " AND stock IS NULL";
+        } elseif ($stock === 'limited') {
+            $sql .= " AND stock IS NOT NULL AND stock > 0";
+        } elseif ($stock === '0' || $stock === 0) {
+            $sql .= " AND stock IS NOT NULL AND stock = 0";
         }
     }
     

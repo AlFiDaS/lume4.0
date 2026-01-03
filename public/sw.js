@@ -106,10 +106,16 @@ self.addEventListener('fetch', (event) => {
 
   // 🎨 CSS/JS: Network First (NUNCA cachear archivos con ?v=)
   if (request.destination === 'style' || request.destination === 'script') {
-    // Si tiene query string v=, NUNCA usar cache
+    // Si tiene query string v=, NUNCA usar cache - siempre forzar recarga
     if (url.search.includes('v=')) {
       event.respondWith(
-        fetch(request, { cache: 'no-store' }).catch(() => {
+        fetch(request, { 
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          }
+        }).catch(() => {
           // Si falla la red, no usar cache, devolver error
           return new Response('Network error', { status: 408 });
         })
