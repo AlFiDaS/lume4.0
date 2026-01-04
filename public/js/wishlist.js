@@ -291,8 +291,9 @@
     };
     
     window.removeFromWishlist = async function(productId, callback) {
-        await originalRemove(productId, callback);
+        const result = await originalRemove(productId, callback);
         updateWishlistCount();
+        return result;
     };
     
     // Agregar estilos de animación

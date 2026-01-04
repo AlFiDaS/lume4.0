@@ -137,7 +137,7 @@ import Breadcrumb from '../components/Breadcrumb.astro';
                   </a>
                   <button 
                     class="remove-favorite" 
-                    onclick="event.preventDefault(); event.stopPropagation(); removeFromWishlist('${escapeHtml(product.product_id)}'); return false;"
+                    onclick="event.preventDefault(); event.stopPropagation(); if(window.removeFromWishlistPage){window.removeFromWishlistPage('${escapeHtml(product.product_id)}');}else{window.removeFromWishlist('${escapeHtml(product.product_id)}');} return false;"
                     title="Eliminar de favoritos">
                     ❌
                   </button>
@@ -169,7 +169,36 @@ import Breadcrumb from '../components/Breadcrumb.astro';
     }
   }
 
-  window.removeFromWishlist = async function(productId) {
+  // Función para mostrar notificación simple
+  function showSimpleNotification(message, type = 'info') {
+    const isMobile = window.innerWidth <= 768;
+    const notification = document.createElement('div');
+    notification.textContent = message;
+    const bgColor = type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8';
+    
+    notification.style.cssText = `
+      position: fixed;
+      ${isMobile ? 'bottom: 20px; left: 50%; transform: translateX(-50%);' : 'top: 20px; right: 20px;'}
+      background: ${bgColor};
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 10000;
+      max-width: 90%;
+      text-align: center;
+      animation: ${isMobile ? 'slideInMobile' : 'slideIn'} 0.3s ease;
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.style.animation = `${isMobile ? 'slideOutMobile' : 'slideOut'} 0.3s ease`;
+      setTimeout(() => notification.remove(), 300);
+    }, 3000);
+  }
+
+  // Función local para eliminar de favoritos (sobrescribe la global en esta página)
+  window.removeFromWishlistPage = async function(productId) {
     const sessionId = getSessionId();
     
     try {
@@ -187,16 +216,46 @@ import Breadcrumb from '../components/Breadcrumb.astro';
       const data = await response.json();
       
       if (data.success) {
-        loadWishlist(); // Recargar lista
-        // Actualizar contador si existe la función
-        if (window.updateWishlistCount) {
+        showSimpleNotification('Eliminado de favoritos', 'info');
+        
+        // Recargar lista inmediatamente
+        await loadWishlist();
+        
+        // Actualizar contador del navbar
+        if (typeof window.updateWishlistCount === 'function') {
           window.updateWishlistCount();
         }
+        
+        // Actualizar botones de wishlist en otras páginas si están visibles
+        if (typeof window.updateWishlistButtons === 'function') {
+          window.updateWishlistButtons(productId, false);
+        }
+      } else {
+        showSimpleNotification(data.error || 'Error al eliminar de favoritos', 'error');
       }
     } catch (error) {
       console.error('Error al eliminar de favoritos:', error);
+      showSimpleNotification('Error al eliminar de favoritos', 'error');
     }
   };
+  
+  // Sobrescribir la función global cuando se carga la página
+  // Esperar a que wishlist.js se cargue primero
+  setTimeout(() => {
+    const originalRemove = window.removeFromWishlist;
+    window.removeFromWishlist = async function(productId, callback) {
+      // Si estamos en la página de wishlist, usar nuestra función
+      if (window.location.pathname === '/wishlist' || window.location.pathname === '/wishlist/') {
+        await window.removeFromWishlistPage(productId);
+        if (callback) callback(true, 'Eliminado');
+      } else {
+        // Si no, usar la función original
+        if (originalRemove) {
+          await originalRemove(productId, callback);
+        }
+      }
+    };
+  }, 200);
 
   // Cargar wishlist al cargar la página
   if (document.readyState === 'loading') {
