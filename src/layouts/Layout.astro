@@ -58,8 +58,8 @@ const canonicalURL = canonical ? new URL(canonical, Astro.site) : Astro.url;
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     
-    <!-- 🖼️ PRELOAD SOLO IMAGEN HERO (crítica) -->
-    <link rel="preload" href="/images/hero.webp" as="image" fetchpriority="high" />
+    <!-- 🖼️ PRELOAD SOLO IMAGEN HERO (crítica) - Solo en páginas que la usan -->
+    <!-- Preload removido para evitar warnings - la imagen se carga cuando es necesaria -->
     
     <!-- 🎨 FUENTES OPTIMIZADAS - Carga asíncrona -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;" />
