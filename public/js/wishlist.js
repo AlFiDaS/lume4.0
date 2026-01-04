@@ -197,14 +197,17 @@
      * @param {string} type - Tipo (success, error, info)
      */
     function showNotification(message, type = 'info') {
+        // Detectar si es mobile
+        const isMobile = window.innerWidth <= 768;
+        
         // Crear elemento de notificación
         const notification = document.createElement('div');
         notification.className = `wishlist-notification ${type}`;
         notification.textContent = message;
-        notification.style.cssText = `
+        
+        // Estilos base
+        const baseStyles = `
             position: fixed;
-            top: 20px;
-            right: 20px;
             background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8'};
             color: white;
             padding: 1rem 1.5rem;
@@ -214,10 +217,32 @@
             animation: slideIn 0.3s ease;
         `;
         
+        // Estilos según dispositivo
+        if (isMobile) {
+            // Mobile: parte inferior central
+            notification.style.cssText = baseStyles + `
+                bottom: 20px;
+                left: 50%;
+                max-width: 90%;
+                text-align: center;
+            `;
+            notification.style.transform = 'translateX(-50%)';
+        } else {
+            // Desktop: esquina superior derecha
+            notification.style.cssText = baseStyles + `
+                top: 20px;
+                right: 20px;
+            `;
+        }
+        
         document.body.appendChild(notification);
         
         setTimeout(() => {
-            notification.style.animation = 'slideOut 0.3s ease';
+            if (isMobile) {
+                notification.classList.add('slide-out');
+            } else {
+                notification.style.animation = 'slideOut 0.3s ease';
+            }
             setTimeout(() => notification.remove(), 300);
         }, 3000);
     }
@@ -275,24 +300,54 @@
         const style = document.createElement('style');
         style.id = 'wishlist-styles';
         style.textContent = `
-            @keyframes slideIn {
-                from {
-                    transform: translateX(100%);
-                    opacity: 0;
+            @media (max-width: 768px) {
+                .wishlist-notification {
+                    animation: slideInMobile 0.3s ease !important;
                 }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
+                .wishlist-notification.slide-out {
+                    animation: slideOutMobile 0.3s ease !important;
+                }
+                @keyframes slideInMobile {
+                    from {
+                        opacity: 0;
+                        transform: translateX(-50%) translateY(20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateX(-50%) translateY(0);
+                    }
+                }
+                @keyframes slideOutMobile {
+                    from {
+                        opacity: 1;
+                        transform: translateX(-50%) translateY(0);
+                    }
+                    to {
+                        opacity: 0;
+                        transform: translateX(-50%) translateY(20px);
+                    }
                 }
             }
-            @keyframes slideOut {
-                from {
-                    transform: translateX(0);
-                    opacity: 1;
+            @media (min-width: 769px) {
+                @keyframes slideIn {
+                    from {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
                 }
-                to {
-                    transform: translateX(100%);
-                    opacity: 0;
+                @keyframes slideOut {
+                    from {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                    to {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
                 }
             }
         `;

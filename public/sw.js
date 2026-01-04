@@ -1,7 +1,7 @@
-// 🚀 SERVICE WORKER OPTIMIZADO - Lume 2.0
-const CACHE_NAME = 'lume-2.1.0-2025-09-03T22-17-43';
-const STATIC_CACHE = 'lume-static-2.1.0-2025-09-03T22-17-43';
-const DYNAMIC_CACHE = 'lume-dynamic-2.1.0-2025-09-03T22-17-43';
+// 🚀 SERVICE WORKER OPTIMIZADO - Lume 2.1.10
+const CACHE_NAME = 'lume-2.1.10-2026-01-03T17-30-00';
+const STATIC_CACHE = 'lume-static-2.1.10-2026-01-03T17-30-00';
+const DYNAMIC_CACHE = 'lume-dynamic-2.1.10-2026-01-03T17-30-00';
 
 // 📱 ESTRATEGIAS DE CACHE
 const STATIC_ASSETS = [
@@ -42,7 +42,7 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         cacheNames.map(cacheName => {
           // Eliminar TODOS los caches que no coincidan con los nombres actuales
-          if (!cacheName.startsWith('lume-2.1.0-') || 
+          if (!cacheName.startsWith('lume-2.1.10-') || 
               (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE && cacheName !== CACHE_NAME)) {
             console.log('🗑️ Eliminando cache obsoleto:', cacheName);
             return caches.delete(cacheName);

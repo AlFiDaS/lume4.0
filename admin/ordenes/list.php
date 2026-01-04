@@ -27,12 +27,36 @@ if (!empty($filtro_status)) {
 }
 
 if (!empty($buscar)) {
-    $buscarTerm = '%' . trim($buscar) . '%';
-    $sql .= " AND (payer_name LIKE :buscar1 OR payer_email LIKE :buscar2 OR payer_phone LIKE :buscar3 OR mercadopago_id LIKE :buscar4)";
-    $params['buscar1'] = $buscarTerm;
-    $params['buscar2'] = $buscarTerm;
-    $params['buscar3'] = $buscarTerm;
-    $params['buscar4'] = $buscarTerm;
+    $buscarTrimmed = trim($buscar);
+    
+    // Detectar si es una búsqueda por ID (número o #número)
+    $isIdSearch = false;
+    $orderId = null;
+    
+    // Si empieza con #, quitar el # y verificar si es número
+    if (strpos($buscarTrimmed, '#') === 0) {
+        $buscarTrimmed = substr($buscarTrimmed, 1);
+    }
+    
+    // Verificar si es un número (búsqueda por ID)
+    if (is_numeric($buscarTrimmed)) {
+        $isIdSearch = true;
+        $orderId = (int)$buscarTrimmed;
+    }
+    
+    if ($isIdSearch) {
+        // Búsqueda exacta por ID
+        $sql .= " AND id = :order_id";
+        $params['order_id'] = $orderId;
+    } else {
+        // Búsqueda por texto (nombre, email, teléfono, mercadopago_id)
+        $buscarTerm = '%' . $buscarTrimmed . '%';
+        $sql .= " AND (payer_name LIKE :buscar1 OR payer_email LIKE :buscar2 OR payer_phone LIKE :buscar3 OR mercadopago_id LIKE :buscar4)";
+        $params['buscar1'] = $buscarTerm;
+        $params['buscar2'] = $buscarTerm;
+        $params['buscar3'] = $buscarTerm;
+        $params['buscar4'] = $buscarTerm;
+    }
 }
 
 $sql .= " ORDER BY created_at DESC";
