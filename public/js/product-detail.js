@@ -120,13 +120,17 @@
             </button>` :
             `<button class="btn-agregar" disabled>Sin stock</button>`;
         
-        // Determinar nombre de categoría para mostrar
+        // Determinar nombre de categoría para mostrar (dinámico)
+        // Si no está en el mapeo, usar el nombre de la categoría directamente
         const categoriaNames = {
             'productos': 'Producto',
             'souvenirs': 'Souvenir',
-            'navidad': 'Navidad'
+            'navidad': 'Navidad',
+            'promos': 'Promo'
         };
-        const categoriaName = categoriaNames[product.categoria] || product.categoria;
+        // Capitalizar primera letra si no está en el mapeo
+        const categoriaName = categoriaNames[product.categoria] || 
+            (product.categoria ? product.categoria.charAt(0).toUpperCase() + product.categoria.slice(1) : 'Producto');
         
         container.innerHTML = `
             <div class="product-images">
@@ -318,15 +322,21 @@
     };
     
     /**
-     * Obtener categoría desde la ruta actual
+     * Obtener categoría desde la ruta actual (dinámico)
      * @returns {string}
      */
     function getCategoriaFromPath() {
         const path = window.location.pathname;
-        if (path.includes('/productos/')) return 'productos';
-        if (path.includes('/souvenirs/')) return 'souvenirs';
-        if (path.includes('/navidad/')) return 'navidad';
-        return 'productos';
+        // Formato: /categoria/slug
+        const match = path.match(/^\/([^\/]+)\/([^\/]+)\/?$/);
+        if (match && match[1]) {
+            // Excluir rutas especiales
+            const excluded = ['api', 'admin', 'ideas', 'carrito', 'wishlist', 'mis-pedidos'];
+            if (!excluded.includes(match[1])) {
+                return match[1];
+            }
+        }
+        return 'productos'; // Fallback
     }
     
     /**
@@ -413,9 +423,12 @@
         if (autoContainer) {
             // Intentar obtener slug desde la URL
             const path = window.location.pathname;
-            const slugMatch = path.match(/\/(productos|souvenirs|navidad)\/([^/]+)/);
+            // Detectar cualquier categoría dinámicamente (formato: /categoria/slug)
+            // Excluir rutas especiales
+            const excluded = ['api', 'admin', 'ideas', 'carrito', 'wishlist', 'mis-pedidos'];
+            const slugMatch = path.match(/^\/([^\/]+)\/([^\/]+)\/?$/);
             
-            if (slugMatch && slugMatch[2]) {
+            if (slugMatch && slugMatch[1] && slugMatch[2] && !excluded.includes(slugMatch[1])) {
                 const slug = slugMatch[2];
                 window.initProductDetail(slug, {
                     containerSelector: '.product-detail-container',

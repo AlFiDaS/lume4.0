@@ -1,7 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import InfoVelas from '../../components/InfoVelas.astro';
-import Breadcrumb from '../../components/Breadcrumb.astro';
 
 // En desarrollo: usar prerender=false para SSR (permite cualquier slug)
 // En build: generar placeholder para modo estático
@@ -9,7 +8,7 @@ export const prerender = import.meta.env.DEV ? false : undefined;
 
 export async function getStaticPaths() {
   // En desarrollo: retornar [] permite SSR para cualquier slug
-  // En build: retornar placeholder genera /productos/placeholder.html
+  // En build: retornar placeholder genera /promos/placeholder.html
   if (import.meta.env.DEV) {
     return [];
   }
@@ -22,7 +21,6 @@ export async function getStaticPaths() {
   <div class="pagina-producto">
     <div id="breadcrumb-container"></div>
 
-    <!-- Producto Grid -->
     <section class="producto-grid">
       <div class="container">
         <div id="product-detail-container" class="product-detail-container">
@@ -45,7 +43,6 @@ export async function getStaticPaths() {
       return null;
     }
     
-    // Cargar el script de detalle de producto
     (function() {
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initDetail);
@@ -61,28 +58,15 @@ export async function getStaticPaths() {
           return;
         }
         
-        // Cargar el script si no está cargado
-        if (!window.initProductDetail) {
-          const script = document.createElement('script');
-          script.src = '/js/product-detail.js?v=2.1.4-2026-01-03T14-11-34';
-          script.onload = function() {
-            if (window.initProductDetail) {
-              window.initProductDetail(productSlug, {
-                containerSelector: '#product-detail-container',
-                autoLoad: true
-              }).then(() => {
-                updateBreadcrumb();
-              });
-            }
-          };
-          document.body.appendChild(script);
-        } else {
+        if (window.initProductDetail) {
           window.initProductDetail(productSlug, {
             containerSelector: '#product-detail-container',
             autoLoad: true
           }).then(() => {
             updateBreadcrumb();
           });
+        } else {
+          setTimeout(initDetail, 100);
         }
       }
       
@@ -92,10 +76,6 @@ export async function getStaticPaths() {
         
         if (container && productContainer) {
           const h1 = productContainer.querySelector('h1');
-          const categoria = window.location.pathname.includes('/productos/') ? 'productos' :
-                           window.location.pathname.includes('/souvenirs/') ? 'souvenirs' :
-                           window.location.pathname.includes('/navidad/') ? 'navidad' : 'productos';
-          
           const productName = h1 ? h1.textContent : 'Producto';
           
           container.innerHTML = `
@@ -103,7 +83,7 @@ export async function getStaticPaths() {
               <div class="container">
                 <a href="/">Inicio</a>
                 <span class="separator">/</span>
-                <a href="/${categoria}">${categoria.charAt(0).toUpperCase() + categoria.slice(1)}</a>
+                <a href="/promos">Promos</a>
                 <span class="separator">/</span>
                 <span class="current">${productName}</span>
               </div>
@@ -114,3 +94,4 @@ export async function getStaticPaths() {
     })();
   </script>
 </Layout>
+

@@ -27,7 +27,8 @@
     "optimize:images": "node scripts/optimize-images.js",
     "lint": "eslint . --ext .js,.ts,.astro",
     "format": "prettier --write .",
-    "type-check": "astro check"
+    "type-check": "astro check",
+    "generate:categories": "php scripts/generate-categories-json.php"
   },
   "dependencies": {
     "@shikijs/engine-javascript": "^3.12.2",

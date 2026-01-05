@@ -406,13 +406,20 @@
         // Luego verificar contenedores normales (sin destacados)
         const autoContainer = document.querySelector('.products-grid');
         if (autoContainer) {
-            // Intentar detectar categoría desde la URL
+            // Intentar detectar categoría desde la URL dinámicamente
             let categoria = null;
             const path = window.location.pathname;
             
-            if (path.includes('/productos')) categoria = 'productos';
-            else if (path.includes('/souvenirs')) categoria = 'souvenirs';
-            else if (path.includes('/navidad')) categoria = 'navidad';
+            // Excluir rutas especiales que no son categorías
+            const excludedPaths = ['/api', '/admin', '/ideas', '/carrito', '/wishlist', '/mis-pedidos', '/'];
+            
+            // Si la ruta no está excluida y tiene formato /categoria, extraer la categoría
+            if (!excludedPaths.some(excluded => path === excluded || path.startsWith(excluded + '/'))) {
+                const match = path.match(/^\/([^\/]+)\/?$/);
+                if (match && match[1]) {
+                    categoria = match[1];
+                }
+            }
             
             window.initProductsLoader({
                 containerSelector: '.products-grid',

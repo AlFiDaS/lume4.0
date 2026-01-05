@@ -36,7 +36,7 @@ export async function getStaticPaths() {
     // Extraer slug directamente de la URL (funciona en modo estático)
     function getSlug() {
       const pathname = window.location.pathname;
-      const match = pathname.match(/\/(productos|souvenirs|navidad)\/([^\/]+)/);
+      const match = pathname.match(/\/(productos|souvenirs|navidad|promos)\/([^\/]+)/);
       if (match && match[2]) {
         return decodeURIComponent(match[2]);
       }

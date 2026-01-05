@@ -32,18 +32,39 @@
     RewriteCond %{REQUEST_URI} \.(css|js|woff|woff2|ttf|eot)$ [NC]
     RewriteRule ^ - [L]
     
-    # PRIORIDAD 5: Redirigir rutas dinámicas de productos a placeholder/index.html
-    # Esto permite que las páginas dinámicas funcionen en modo estático
-    # Ejemplo: /navidad/luky -> /navidad/placeholder/index.html (JavaScript extrae el slug real)
-    # Nota: Astro genera /productos/placeholder/index.html, no /productos/placeholder.html
-    RewriteCond %{REQUEST_URI} ^/(productos|souvenirs|navidad)/([^/]+)/?$
-    RewriteCond %{REQUEST_URI} !^/(productos|souvenirs|navidad)/placeholder(/|$)
-    RewriteRule ^(productos|souvenirs|navidad)/([^/]+)/?$ $1/placeholder/ [L]
+    # PRIORIDAD 5: Redirigir rutas dinámicas de productos a placeholder/placeholder/index.html
+    # Esto permite que las páginas dinámicas funcionen sin necesidad de build
+    # Ejemplo: /test3/producto-slug -> /placeholder/placeholder/index.html (JavaScript extrae la categoría y slug real)
+    # Excluir rutas especiales (api, admin, ideas, carrito, wishlist, mis-pedidos, etc.)
+    RewriteCond %{REQUEST_URI} !^/(api|admin|ideas|carrito|wishlist|mis-pedidos|index\.html|\.well-known)/
+    RewriteCond %{REQUEST_URI} ^/([^/]+)/([^/]+)/?$
+    RewriteCond %{REQUEST_URI} !^/([^/]+)/placeholder(/|$)
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    # Redirigir a la página dinámica genérica
+    RewriteRule ^([^/]+)/([^/]+)/?$ /placeholder/placeholder/index.html [L]
+    
+    # PRIORIDAD 5.5: Redirigir rutas dinámicas de categorías a placeholder/index.html
+    # Esto permite que las páginas de categorías dinámicas funcionen sin necesidad de build
+    # Ejemplo: /test3 -> /placeholder/index.html (JavaScript detecta la categoría desde la URL)
+    # IMPORTANTE: Esta regla debe ir ANTES de PRIORIDAD 6 para tener prioridad
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} ^/([^/]+)/?$
+    RewriteCond %{REQUEST_URI} !^/(api|admin|ideas|carrito|wishlist|mis-pedidos|index\.html|\.well-known)/
+    RewriteCond %{REQUEST_URI} !^/placeholder
+    # Excluir categorías estáticas existentes (tienen sus propias páginas)
+    RewriteCond %{REQUEST_URI} !^/(productos|souvenirs|navidad|promos)/?$
+    # Redirigir a la página dinámica genérica
+    RewriteRule ^([^/]+)/?$ /placeholder/index.html [L]
     
     # PRIORIDAD 6: Si la URL no es un archivo o directorio existente, servir index.html de la raíz
+    # IMPORTANTE: Esta regla debe ir DESPUÉS de PRIORIDAD 5.5
+    # Excluir rutas de una sola palabra (ya manejadas por PRIORIDAD 5.5)
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} !^/(api|admin)/
+    RewriteCond %{REQUEST_URI} !^/[^/]+/?$
     RewriteRule ^(.*)$ index.html [L]
 </IfModule>
 
