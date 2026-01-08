@@ -54,7 +54,7 @@
     RewriteCond %{REQUEST_URI} !^/(api|admin|ideas|carrito|wishlist|mis-pedidos|index\.html|\.well-known)/
     RewriteCond %{REQUEST_URI} !^/placeholder
     # Excluir categorías estáticas existentes (tienen sus propias páginas)
-    RewriteCond %{REQUEST_URI} !^/(productos|souvenirs|navidad|promos)/?$
+    RewriteCond %{REQUEST_URI} !^/(productos|souvenirs|navidad)/?$
     # Redirigir a la página dinámica genérica
     RewriteRule ^([^/]+)/?$ /placeholder/index.html [L]
     

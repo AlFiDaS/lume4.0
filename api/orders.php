@@ -55,15 +55,43 @@ try {
         exit;
     }
     
-    // Buscar por número de pedido o email
-    $sql = "SELECT id, email, phone, items, total, status, created_at 
-            FROM orders 
-            WHERE id LIKE :search 
-               OR email LIKE :search 
-            ORDER BY created_at DESC 
-            LIMIT 20";
+    // Detectar si es una búsqueda por ID (número o #número)
+    $searchTrimmed = trim($search);
+    $isIdSearch = false;
+    $orderId = null;
     
-    $params = ['search' => '%' . $search . '%'];
+    // Si empieza con #, quitar el # y verificar si es número
+    if (strpos($searchTrimmed, '#') === 0) {
+        $searchTrimmed = substr($searchTrimmed, 1);
+    }
+    
+    // Verificar si es un número (búsqueda por ID)
+    if (is_numeric($searchTrimmed)) {
+        $isIdSearch = true;
+        $orderId = (int)$searchTrimmed;
+    }
+    
+    // Construir consulta según el tipo de búsqueda
+    // Nota: La tabla orders usa payer_email, payer_phone, total_amount (no email, phone, total)
+    $sql = "SELECT id, payer_email as email, payer_phone as phone, items, total_amount as total, status, created_at 
+            FROM orders 
+            WHERE ";
+    
+    $params = [];
+    
+    if ($isIdSearch) {
+        // Búsqueda exacta por ID
+        $sql .= "id = :order_id";
+        $params['order_id'] = $orderId;
+    } else {
+        // Búsqueda por texto (email o teléfono)
+        $searchTerm = '%' . $searchTrimmed . '%';
+        $sql .= "(payer_email LIKE :search1 OR payer_phone LIKE :search2)";
+        $params['search1'] = $searchTerm;
+        $params['search2'] = $searchTerm;
+    }
+    
+    $sql .= " ORDER BY created_at DESC LIMIT 20";
     
     $orders = fetchAll($sql, $params);
     
