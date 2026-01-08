@@ -133,15 +133,20 @@ export async function getStaticPaths() {
           // Actualizar título
           const titleEl = document.getElementById('category-title');
           if (titleEl) {
-            titleEl.textContent = `Catálogo de ${category.name}`;
+            // Usar catalog_title si existe, sino usar formato por defecto
+            if (category.catalog_title) {
+              titleEl.textContent = category.catalog_title;
+            } else {
+              titleEl.textContent = `Catálogo de ${category.name}`;
+            }
           }
           
           // Actualizar descripción si existe
           const descEl = document.getElementById('category-description');
           if (descEl && category.description) {
             descEl.textContent = category.description;
-          } else if (descEl && categoriaSlug === 'souvenirs') {
-            descEl.textContent = 'Cantidad mínima: 10 unidades';
+          } else if (descEl && category.min_quantity) {
+            descEl.textContent = `Cantidad mínima: ${category.min_quantity} unidades`;
           }
           
           // Actualizar breadcrumb

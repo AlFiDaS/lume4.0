@@ -4,6 +4,11 @@
 (function() {
   'use strict';
   
+  // Cache de categorías con min_quantity
+  let categoriesCache = null;
+  let categoriesCacheTime = null;
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+
   // Funciones del carrito
   function getCarrito() {
     return JSON.parse(localStorage.getItem("carrito")) || [];
@@ -14,15 +19,46 @@
     updateCartCount();
   }
 
+  // Obtener min_quantity de una categoría desde la API
+  async function getCategoryMinQuantity(categoriaSlug) {
+    try {
+      // Verificar cache
+      const now = Date.now();
+      if (categoriesCache && categoriesCacheTime && (now - categoriesCacheTime) < CACHE_DURATION) {
+        const category = categoriesCache.find(cat => cat.slug === categoriaSlug);
+        return category ? (category.min_quantity || null) : null;
+      }
+
+      // Cargar categorías desde la API
+      const response = await fetch('/api/categories.php');
+      const data = await response.json();
+      
+      if (data.success && data.categories) {
+        categoriesCache = data.categories;
+        categoriesCacheTime = now;
+        const category = data.categories.find(cat => cat.slug === categoriaSlug);
+        return category ? (category.min_quantity || null) : null;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error al obtener min_quantity de categoría:', error);
+      // Fallback: si es souvenirs, devolver 10
+      return categoriaSlug === 'souvenirs' ? 10 : null;
+    }
+  }
+
   // Función global para agregar al carrito
-  function agregarAlCarrito(name, price, image, slug, categoria) {
+  async function agregarAlCarrito(name, price, image, slug, categoria) {
     let carrito = getCarrito();
 
     const index = carrito.findIndex(
       (p) => p.slug === slug && p.name === name
     );
 
-    const esSouvenir = categoria === "souvenirs";
+    // Obtener min_quantity dinámicamente
+    const minQuantity = await getCategoryMinQuantity(categoria);
+    const cantidadInicial = minQuantity ? minQuantity : 1;
 
     if (index !== -1) {
       carrito[index].cantidad++;
@@ -32,8 +68,9 @@
         price, 
         image, 
         slug, 
-        categoria, 
-        cantidad: esSouvenir ? 10 : 1 
+        categoria,
+        min_quantity: minQuantity, // Guardar min_quantity en el item
+        cantidad: cantidadInicial
       });
     }
 

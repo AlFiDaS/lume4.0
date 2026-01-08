@@ -46,6 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'id' => $categoriaId,
             'name' => sanitize($_POST['name'] ?? ''),
             'slug' => sanitize($_POST['slug'] ?? ''),
+            'catalog_title' => sanitize($_POST['catalog_title'] ?? ''),
+            'min_quantity' => !empty($_POST['min_quantity']) ? (int)$_POST['min_quantity'] : null,
             'visible' => isset($_POST['visible']) ? 1 : 0,
             'orden' => (int)($_POST['orden'] ?? 0)
         ];
@@ -71,6 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $sql = "UPDATE categories SET 
                         slug = :slug,
                         name = :name,
+                        catalog_title = :catalog_title,
+                        min_quantity = :min_quantity,
                         visible = :visible,
                         orden = :orden
                         WHERE id = :id";
@@ -78,6 +82,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $params = [
                     'slug' => $formData['slug'],
                     'name' => $formData['name'],
+                    'catalog_title' => !empty($formData['catalog_title']) ? $formData['catalog_title'] : null,
+                    'min_quantity' => $formData['min_quantity'],
                     'visible' => $formData['visible'],
                     'orden' => $formData['orden'],
                     'id' => $categoriaId
@@ -134,6 +140,23 @@ $productCount = countProductsInCategory($categoria['slug']);
                    pattern="[a-z0-9-]+" 
                    title="Solo letras minúsculas, números y guiones">
             <small>⚠️ Cambiar el slug puede afectar las URLs existentes. Se usará en: /slug/</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="catalog_title">Título del Catálogo</label>
+            <input type="text" id="catalog_title" name="catalog_title" 
+                   value="<?= htmlspecialchars($formData['catalog_title'] ?? '') ?>"
+                   placeholder="Dejar vacío para usar: 'Catálogo de (nombre)'">
+            <small>Si se deja vacío, el título será "Catálogo de [Nombre]". Este título aparecerá en la página del catálogo.</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="min_quantity">Cantidad Mínima de Compra</label>
+            <input type="number" id="min_quantity" name="min_quantity" 
+                   value="<?= htmlspecialchars($formData['min_quantity'] ?? '') ?>"
+                   min="1" 
+                   placeholder="Ej: 10">
+            <small>Si se establece (ej: 10), al agregar productos al carrito se agregará automáticamente esta cantidad mínima, y no se podrá reducir por debajo de este número. Dejar vacío si no hay mínimo.</small>
         </div>
         
         <div class="form-group">
