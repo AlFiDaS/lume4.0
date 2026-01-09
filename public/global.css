@@ -2053,6 +2053,7 @@ div.breadcrumb .current {
   padding: var(--space-md);
   box-shadow: var(--shadow-md);
   border: 1px solid #f0f0f0;
+  position: relative;
 }
 
 .main-image img,
@@ -2241,6 +2242,44 @@ div.breadcrumb .current {
   line-height: 1;
 }
 
+.price-transfer-label {
+  font-size: 1.2rem;
+  color: var(--primary);
+  font-weight: 600;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.price-card-row-detail {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.price-card-label-detail {
+  font-size: 0.9rem;
+  color: #999;
+  font-weight: 500;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.price-card-value-detail {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #999;
+  line-height: 1;
+}
+
+.price-card-text-detail {
+  font-size: 0.9rem;
+  color: #999;
+  font-weight: 400;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.1;
+}
+
 .price-card-note {
   font-size: 0.75rem;
   color: #999;
@@ -2400,6 +2439,52 @@ div.breadcrumb .current {
 
 .wishlist-btn-detail.in-wishlist:hover {
   background: linear-gradient(135deg, #d89bc0, #e0a4ce);
+}
+
+/* Botón de favoritos en la imagen principal del detalle */
+.wishlist-btn-detail-image {
+  position: absolute;
+  bottom: var(--space-md);
+  right: var(--space-md);
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 1.3rem;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-normal);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(10px);
+}
+
+.wishlist-btn-detail-image:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: scale(1.1);
+  box-shadow: var(--shadow-md);
+}
+
+.wishlist-btn-detail-image.in-wishlist {
+  background: rgba(224, 164, 206, 0.95);
+  color: white;
+}
+
+.wishlist-btn-detail-image.in-wishlist:hover {
+  background: rgba(224, 164, 206, 1);
+}
+
+@media (max-width: 768px) {
+  .wishlist-btn-detail-image {
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+    bottom: var(--space-sm);
+    right: var(--space-sm);
+  }
 }
 
 /* ============================================

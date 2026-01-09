@@ -147,6 +147,14 @@
                         fetchpriority="high"
                         onerror="if(this.src!=='/images/placeholder.svg'){this.onerror=null;this.src='/images/placeholder.svg';}else{this.style.display='none';}"
                     />
+                    <button 
+                        class="wishlist-btn-detail-image" 
+                        data-wishlist-id="${escapeHtml(product.id)}"
+                        onclick="toggleWishlist('${escapeHtml(product.id)}')"
+                        title="Agregar a favoritos"
+                    >
+                        🤍
+                    </button>
                 </div>
                 ${hasValidHover ? `
                     <div class="thumbnails">
@@ -195,18 +203,25 @@
                 
                 <div class="producto-price">
                     <div class="price-main-row">
-                        <span class="price">${escapeHtml(calculateCardPrice(product.price) || product.price || 'N/A')}</span>
-                        <div class="price-badge">hasta en 3 cuotas</div>
+                        ${(() => {
+                            if (!product.price) return '<span class="price">N/A</span>';
+                            // Formatear precio de transferencia (extraer número y formatear con separadores de miles)
+                            const transferPriceValue = extractPriceValue(product.price);
+                            const transferPriceFormatted = transferPriceValue > 0 ? '$' + transferPriceValue.toLocaleString('es-AR') : product.price;
+                            return `<span class="price">${escapeHtml(transferPriceFormatted)}</span><span class="price-transfer-label">Transferencia</span>`;
+                        })()}
                     </div>
                     ${(() => {
                         if (!product.price) return '';
-                        // Formatear precio de transferencia (extraer número y formatear con separadores de miles)
+                        // Calcular precio de tarjeta (25% más)
                         const transferPriceValue = extractPriceValue(product.price);
-                        const transferPriceFormatted = transferPriceValue > 0 ? '$' + transferPriceValue.toLocaleString('es-AR') : product.price;
+                        const cardPrice = Math.round((transferPriceValue * 1.25) / 100) * 100;
+                        const cardPriceFormatted = '$' + cardPrice.toLocaleString('es-AR');
                         return `
-                        <div class="price-card-row">
-                            <span class="price-card-label">Transferencia (-25%):</span>
-                            <span class="price-card-value">${escapeHtml(transferPriceFormatted)}</span>
+                        <div class="price-card-row-detail">
+                            <span class="price-card-label-detail">Mercado Pago / Tarjeta:</span>
+                            <span class="price-card-value-detail">${escapeHtml(cardPriceFormatted)}</span>
+                            <span class="price-card-text-detail">hasta en 3 cuotas</span>
                         </div>
                     `;
                     })()}
@@ -230,14 +245,6 @@
                 </div>
                 
                 <div class="producto-actions">
-                    <button 
-                        class="wishlist-btn-detail" 
-                        data-wishlist-id="${escapeHtml(product.id)}"
-                        onclick="toggleWishlist('${escapeHtml(product.id)}')"
-                        title="Agregar a favoritos"
-                    >
-                        🤍 Agregar a favoritos
-                    </button>
                     ${stockButton}
                     <a href="/${product.categoria}" class="btn-volver">
                         ← Volver al catálogo
