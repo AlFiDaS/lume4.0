@@ -49,11 +49,15 @@ try {
     switch ($method) {
         case 'GET':
             // Obtener wishlist del usuario
+            // Solo mostrar productos visibles y de categorías visibles
             $sql = "SELECT w.id, w.product_id, w.created_at, 
                            p.name, p.slug, p.image, p.hoverImage, p.price, p.categoria, p.stock
                     FROM wishlist w
                     INNER JOIN products p ON w.product_id = p.id
+                    INNER JOIN categories c ON p.categoria = c.slug
                     WHERE w.session_id = :session_id
+                      AND p.visible = 1
+                      AND c.visible = 1
                     ORDER BY w.created_at DESC";
             
             $items = fetchAll($sql, ['session_id' => $sessionId]);
@@ -73,10 +77,15 @@ try {
                 throw new Exception('Product ID requerido');
             }
             
-            // Verificar que el producto existe
-            $product = fetchOne("SELECT id FROM products WHERE id = :id", ['id' => $productId]);
+            // Verificar que el producto existe, es visible y su categoría es visible
+            $product = fetchOne(
+                "SELECT p.id FROM products p
+                 INNER JOIN categories c ON p.categoria = c.slug
+                 WHERE p.id = :id AND p.visible = 1 AND c.visible = 1",
+                ['id' => $productId]
+            );
             if (!$product) {
-                throw new Exception('Producto no encontrado');
+                throw new Exception('Producto no encontrado o no disponible');
             }
             
             // Verificar si ya está en wishlist

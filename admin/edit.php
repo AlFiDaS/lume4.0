@@ -330,7 +330,7 @@ $csrfToken = generateCSRFToken();
                     <div class="input-with-icon">
                         <span class="input-icon">$</span>
                         <input type="text" id="price" name="price" 
-                               value="<?= htmlspecialchars($formData['price'] ?? '') ?>"
+                               value="<?= htmlspecialchars(preg_replace('/[^\d]/', '', $formData['price'] ?? '')) ?>"
                                placeholder="2400">
                     </div>
                     <small>Escribe solo el número (ej: 2400), el símbolo $ se agregará automáticamente</small>
@@ -445,6 +445,7 @@ $csrfToken = generateCSRFToken();
                         <input type="radio" name="stock_type" value="unlimited" 
                                <?= ($product['stock'] ?? null) === null ? 'checked' : '' ?>
                                onchange="updateStockFields()">
+                        <span class="radio-checkmark"></span>
                         <div class="radio-content">
                             <span class="radio-icon">∞</span>
                             <div>
@@ -457,6 +458,7 @@ $csrfToken = generateCSRFToken();
                         <input type="radio" name="stock_type" value="limited" 
                                <?= ($product['stock'] ?? null) !== null ? 'checked' : '' ?>
                                onchange="updateStockFields()">
+                        <span class="radio-checkmark"></span>
                         <div class="radio-content">
                             <span class="radio-icon">📊</span>
                             <div>
@@ -544,50 +546,30 @@ document.getElementById('slug').addEventListener('input', function(e) {
     }
 });
 
-// Formatear precio automáticamente
+// Formatear precio automáticamente - Solo números (el $ es visual)
 (function() {
     const priceInput = document.getElementById('price');
     
-    // Función para limpiar y formatear precio
-    function formatPrice(value) {
-        // Remover todo excepto números
-        let cleaned = value.replace(/[^\d]/g, '');
-        // Si hay números, agregar $
-        return cleaned ? '$' + cleaned : '';
-    }
-    
-    // Función para obtener solo el número (sin $)
-    function getPriceNumber(value) {
+    // Función para limpiar y dejar solo números
+    function cleanPrice(value) {
         return value.replace(/[^\d]/g, '');
     }
     
-    // Cuando el usuario escribe
+    // Cuando el usuario escribe, solo permitir números
     priceInput.addEventListener('input', function(e) {
-        const cursorPos = e.target.selectionStart;
-        const oldValue = e.target.value;
-        const oldLength = oldValue.length;
-        
-        // Formatear
-        const formatted = formatPrice(e.target.value);
-        e.target.value = formatted;
-        
-        // Ajustar posición del cursor
-        const newLength = formatted.length;
-        const lengthDiff = newLength - oldLength;
-        const newCursorPos = Math.max(0, cursorPos + lengthDiff);
-        e.target.setSelectionRange(newCursorPos, newCursorPos);
+        e.target.value = cleanPrice(e.target.value);
     });
     
-    // Cuando el campo pierde el foco, asegurar formato
+    // Cuando el campo pierde el foco, asegurar que solo tenga números
     priceInput.addEventListener('blur', function(e) {
-        const numValue = getPriceNumber(e.target.value);
-        e.target.value = formatPrice(numValue);
+        e.target.value = cleanPrice(e.target.value);
     });
     
-    // Al cargar la página, si tiene valor con $, mantenerlo pero permitir editar
+    // Al cargar la página, limpiar el valor si tiene $ u otros caracteres
     const currentValue = priceInput.value;
-    if (currentValue && !currentValue.startsWith('$')) {
-        priceInput.value = formatPrice(currentValue);
+    if (currentValue) {
+        const cleaned = cleanPrice(currentValue);
+        priceInput.value = cleaned;
     }
 })();
 
@@ -786,13 +768,21 @@ function updateStockFields() {
     left: 1rem;
     top: 50%;
     transform: translateY(-50%);
-    color: #999;
-    font-weight: 600;
-    font-size: 1.1rem;
+    color: #666;
+    font-weight: 700;
+    font-size: 1rem;
+    pointer-events: none;
+    z-index: 1;
+    user-select: none;
 }
 
 .input-with-icon input {
-    padding-left: 2.5rem;
+    padding-left: 2.5rem !important;
+    font-weight: 500;
+}
+
+.form-group .input-with-icon input[type="text"] {
+    padding-left: 2.5rem !important;
 }
 
 /* Imágenes */
@@ -908,30 +898,57 @@ function updateStockFields() {
 
 .radio-option {
     display: flex;
-    align-items: center;
-    padding: 1rem 1.5rem;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border: 2px solid #e5e5e5;
+    border-radius: 10px;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.2s ease;
     background: white;
+    position: relative;
 }
 
 .radio-option:hover {
     border-color: #e0a4ce;
     background: #fef5fc;
+    box-shadow: 0 2px 8px rgba(224, 164, 206, 0.1);
 }
 
 .radio-option input[type="radio"] {
-    margin: 0;
-    margin-right: 1rem;
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
 }
 
-.radio-option input[type="radio"]:checked + .radio-content {
-    color: #e0a4ce;
+.radio-checkmark {
+    width: 22px;
+    height: 22px;
+    border: 2px solid #d0d0d0;
+    border-radius: 6px;
+    position: relative;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+    margin-top: 3px;
+    background: white;
+}
+
+.radio-option input[type="radio"]:checked + .radio-checkmark {
+    background: #e0a4ce;
+    border-color: #e0a4ce;
+}
+
+.radio-option input[type="radio"]:checked + .radio-checkmark::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 50%;
 }
 
 .radio-content {
@@ -942,19 +959,26 @@ function updateStockFields() {
 }
 
 .radio-icon {
-    font-size: 1.5rem;
-    width: 40px;
-    height: 40px;
+    font-size: 1.25rem;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #f5f5f5;
-    border-radius: 8px;
+    background: #f8f8f8;
+    border-radius: 6px;
+    transition: all 0.2s ease;
 }
 
 .radio-option input[type="radio"]:checked ~ .radio-content .radio-icon {
     background: #e0a4ce;
     color: white;
+}
+
+.radio-option:has(input[type="radio"]:checked) {
+    border-color: #e0a4ce;
+    background: #fef5fc;
+    box-shadow: 0 2px 8px rgba(224, 164, 206, 0.15);
 }
 
 .radio-content strong {
@@ -987,15 +1011,22 @@ function updateStockFields() {
     display: flex;
     align-items: flex-start;
     gap: 1rem;
-    padding: 1rem 1.5rem;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    border: 2px solid #e5e5e5;
+    border-radius: 10px;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.2s ease;
     background: white;
+    position: relative;
 }
 
 .checkbox-modern:hover {
+    border-color: #e0a4ce;
+    background: #fef5fc;
+    box-shadow: 0 2px 8px rgba(224, 164, 206, 0.1);
+}
+
+.checkbox-modern:has(input[type="checkbox"]:checked) {
     border-color: #e0a4ce;
     background: #fef5fc;
 }
@@ -1008,14 +1039,15 @@ function updateStockFields() {
 }
 
 .checkmark {
-    width: 24px;
-    height: 24px;
-    border: 2px solid #e0e0e0;
+    width: 22px;
+    height: 22px;
+    border: 2px solid #d0d0d0;
     border-radius: 6px;
     position: relative;
     flex-shrink: 0;
-    transition: all 0.3s;
-    margin-top: 2px;
+    transition: all 0.2s ease;
+    margin-top: 3px;
+    background: white;
 }
 
 .checkbox-modern input[type="checkbox"]:checked + .checkmark {
@@ -1030,8 +1062,9 @@ function updateStockFields() {
     left: 50%;
     transform: translate(-50%, -50%);
     color: white;
-    font-weight: bold;
-    font-size: 14px;
+    font-weight: 700;
+    font-size: 13px;
+    line-height: 1;
 }
 
 .checkbox-modern strong {
