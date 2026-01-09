@@ -91,8 +91,8 @@ import Breadcrumb from '../components/Breadcrumb.astro';
                   <select id="envio" required>
                     <option value="Corrientes Envio a Domicilio">Envío a Domicilio - Corrientes, Capital</option>
                     <option value="Corrientes Retiro en Sucursal">Retiro sin costo por Pasaje Alvarez 873 - Corrientes, Capital</option>
-                    <option value="Correo Argentino - Sucursal">Correo Argentino - Retiro en Sucursal ($8500)</option>
-                    <option value="Correo Argentino - Domicilio">Correo Argentino - Envío a Domicilio ($10500)</option>
+                    <option value="Correo Argentino - Sucursal">Correo Argentino - Retiro en Sucursal ($6500)</option>
+                    <option value="Correo Argentino - Domicilio">Correo Argentino - Envío a Domicilio ($8500)</option>
                   </select>
                 </div>
 
@@ -131,11 +131,18 @@ import Breadcrumb from '../components/Breadcrumb.astro';
                   <textarea id="observaciones" rows="2"></textarea>
                 </div>
 
+                <div class="total-a-pagar">
+                  <strong>Total a pagar: <span id="total-a-pagar-display">$0</span></strong>
+                </div>
+                <button type="button" id="btn-ver-resumen" class="btn-ver-resumen">
+                  📊 Ver resumen
+                </button>
+
                 <div class="form-group">
                   <label for="pago">Forma de pago</label>
                   <select id="pago">
-                    <option value="tarjeta" selected>MercadoPago - Hasta en 3 cuotas sin interés</option>
-                    <option value="transferencia_directa">Transferencia (-25%)</option>
+                    <option value="transferencia_directa" selected>Transferencia (25% descuento)</option>
+                    <option value="tarjeta">Mercadopago o tarjeta - Mismo precio hasta en 3 cuotas</option>
                   </select>
                 </div>
                 
@@ -160,10 +167,6 @@ import Breadcrumb from '../components/Breadcrumb.astro';
                       <img id="proof-preview-img" src="" alt="Vista previa" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 1px solid #ddd;" />
                     </div>
                   </div>
-                </div>
-
-                <div class="total-a-pagar">
-                  <strong>Total a pagar: <span id="total-a-pagar-display">$0</span></strong>
                 </div>
 
                 <button id="btn-finalizar" class="btn-finalizar" type="button">
@@ -436,10 +439,9 @@ import Breadcrumb from '../components/Breadcrumb.astro';
         const card = document.createElement("div");
         card.className = "producto-carrito";
 
-        // El precio guardado es de transferencia, calcular precio de tarjeta para mostrar
+        // El precio guardado es de transferencia, mostrarlo directamente
         const transferPriceValue = extractPriceValue(item.price);
-        const cardPriceValue = calculateCardPriceFromTransfer(transferPriceValue);
-        const priceFormatted = '$' + cardPriceValue.toLocaleString('es-AR');
+        const priceFormatted = '$' + transferPriceValue.toLocaleString('es-AR');
 
         card.innerHTML = `
           <div class="producto-imagen" onclick="window.location.href='/${item.categoria}/${item.slug}'">
@@ -460,8 +462,8 @@ import Breadcrumb from '../components/Breadcrumb.astro';
         `;
 
         contenedor.appendChild(card);
-        // Sumar precio de tarjeta redondeado por unidad
-        totalCarrito += cardPriceValue * item.cantidad;
+        // Sumar precio de transferencia por unidad
+        totalCarrito += transferPriceValue * item.cantidad;
       });
 
       const get = id => document.getElementById(id)?.value || '';
@@ -480,11 +482,11 @@ import Breadcrumb from '../components/Breadcrumb.astro';
           envioTexto = "A coordinar precio";
           break;
         case "Correo Argentino - Sucursal":
-          envioCosto = 8500;
+          envioCosto = 6500;
           envioTexto = `$${envioCosto}`;
           break;
         case "Correo Argentino - Domicilio":
-          envioCosto = 10500;
+          envioCosto = 8500;
           envioTexto = `$${envioCosto}`;
           break;
         default:
@@ -492,25 +494,20 @@ import Breadcrumb from '../components/Breadcrumb.astro';
       }
 
       // Calcular precios según método de pago
-      // totalCarrito ya contiene el precio de tarjeta (calculado y redondeado)
+      // totalCarrito ya contiene el precio de transferencia (base)
       const isTarjeta = (pago === 'tarjeta');
       const isTransferenciaDirecta = (pago === 'transferencia_directa');
       
-      let subtotalCalculado = totalCarrito; // Precio de tarjeta
+      let subtotalCalculado = totalCarrito; // Precio de transferencia (base)
       let envioCalculado = envioCosto;
       
-      if (isTransferenciaDirecta) {
-        // Calcular precio de transferencia desde los precios originales
-        // Para evitar errores de redondeo, recalculamos desde los precios originales de transferencia
-        let totalTransferencia = 0;
-        carrito.forEach((item) => {
-          const transferPriceValue = extractPriceValue(item.price);
-          totalTransferencia += transferPriceValue * item.cantidad;
-        });
-        subtotalCalculado = totalTransferencia;
-        // Aplicar descuento del 25% al envío también (multiplicar por 0.8)
-        envioCalculado = Math.round(envioCosto * 0.8);
+      if (isTarjeta) {
+        // Si elige tarjeta, aplicar 25% más al subtotal (redondeado al 100)
+        subtotalCalculado = Math.round((totalCarrito * 1.25) / 100) * 100;
+        // También aplicar 25% más al envío (redondeado al 100)
+        envioCalculado = Math.round((envioCosto * 1.25) / 100) * 100;
       }
+      // Si es transferencia directa, el precio ya es el de transferencia (sin cambios)
       
       // Aplicar descuento de cupón si existe (revalidar primero)
       let descuentoCupon = 0;
@@ -540,10 +537,9 @@ import Breadcrumb from '../components/Breadcrumb.astro';
       }
 
       // Formatear totales para visualización (con separadores de miles)
-      carritoTotalEl.textContent = isTransferenciaDirecta 
-        ? `$${subtotalCalculado.toLocaleString('es-AR')} (-25%)` 
-        : `$${subtotalCalculado.toLocaleString('es-AR')}`;
-      envioInfoEl.textContent = isTransferenciaDirecta ? `$${envioCalculado.toLocaleString('es-AR')} (-25%)` : envioTexto;
+      carritoTotalEl.textContent = `$${subtotalCalculado.toLocaleString('es-AR')}`;
+      // Mostrar el envío calculado (puede tener 25% adicional si es tarjeta)
+      envioInfoEl.textContent = envioCalculado > 0 ? `$${envioCalculado.toLocaleString('es-AR')}` : envioTexto;
       
       // Mostrar descuento si hay cupón aplicado
       const descuentoItem = document.getElementById('descuento-item');
@@ -598,9 +594,9 @@ import Breadcrumb from '../components/Breadcrumb.astro';
         datosCliente += `\nProvincia: ${get('provincia')}\nLocalidad: ${get('localidad')}\nDirección: ${get('direccion')}\nCP: ${get('cp')}\nEmail: ${get('email')}\nObservaciones: ${get('observaciones')}`;
       }
 
-      let metodoPagoTexto = 'MercadoPago - Hasta en 3 cuotas sin interés';
-      if (pago === 'transferencia_directa') {
-        metodoPagoTexto = 'Transferencia (-25%)';
+      let metodoPagoTexto = 'Transferencia (25% descuento)';
+      if (pago === 'tarjeta') {
+        metodoPagoTexto = 'Mercadopago o tarjeta - Mismo precio hasta en 3 cuotas';
       }
       
       const texto = encodeURIComponent(`Hola *Lume*, me gustaría hacer un pedido de:
@@ -608,7 +604,7 @@ ${carrito.map(p => `• ${p.name} - ${p.price} x${p.cantidad}`).join("\n")}
 Forma de pago: ${metodoPagoTexto}
 Aclaraciones: ${get('aclaraciones') || 'Ninguna'}
 *Tu carrito: $${subtotalCalculado}*
-Envío: ${isTransferenciaDirecta ? `$${envioCalculado} (-25%)` : envioTexto}
+Envío: ${envioCalculado > 0 ? `$${envioCalculado.toLocaleString('es-AR')}` : envioTexto}
 *Total a pagar: $${totalFinal}*
 
 ${datosCliente}
@@ -860,13 +856,10 @@ Gracias!`);
         const envio = document.getElementById('envio')?.value || '';
         let envioCosto = 0;
         if (envio.includes('Correo Argentino - Sucursal')) {
-          envioCosto = 8500;
+          envioCosto = 6500;
         } else if (envio.includes('Correo Argentino - Domicilio')) {
-          envioCosto = 10500;
+          envioCosto = 8500;
         }
-        
-        // Aplicar descuento del 25% al envío también (multiplicar por 0.8)
-        const envioConDescuento = Math.round(envioCosto * 0.8);
         
         // Aplicar descuento de cupón si existe (revalidar primero para obtener el descuento actualizado)
         const couponData = JSON.parse(localStorage.getItem('applied_coupon') || 'null');
@@ -882,7 +875,7 @@ Gracias!`);
           }
         }
         
-        const totalFinal = totalCarrito + envioConDescuento - descuentoCupon;
+        const totalFinal = totalCarrito + envioCosto - descuentoCupon;
         
         // El total no puede ser negativo
         if (totalFinal < 0) {
@@ -975,20 +968,16 @@ Gracias!`);
       // Revalidar cupón si existe antes de renderizar
       const couponData = JSON.parse(localStorage.getItem('applied_coupon') || 'null');
       if (couponData && couponData.valid) {
-        // Calcular total para revalidación
+        // Calcular total para revalidación (precio base de transferencia)
         let totalCarrito = 0;
         carrito.forEach((item) => {
           const transferPriceValue = extractPriceValue(item.price);
-          const cardPriceValue = calculateCardPriceFromTransfer(transferPriceValue);
-          totalCarrito += cardPriceValue * item.cantidad;
+          totalCarrito += transferPriceValue * item.cantidad;
         });
         const pago = document.getElementById('pago')?.value || '';
-        if (pago === 'transferencia_directa') {
-          totalCarrito = 0;
-          carrito.forEach((item) => {
-            const transferPriceValue = extractPriceValue(item.price);
-            totalCarrito += transferPriceValue * item.cantidad;
-          });
+        // Si es tarjeta, aplicar 25% más para la validación del cupón
+        if (pago === 'tarjeta') {
+          totalCarrito = Math.round((totalCarrito * 1.25) / 100) * 100;
         }
         // Revalidar asíncronamente y actualizar descuento
         revalidarCupon(couponData.coupon.code, totalCarrito, carrito).then(result => {
@@ -1033,22 +1022,17 @@ Gracias!`);
         return;
       }
       
-      // Calcular total del carrito
+      // Calcular total del carrito (precio base de transferencia)
       let totalCarrito = 0;
       carrito.forEach((item) => {
         const transferPriceValue = extractPriceValue(item.price);
-        const cardPriceValue = calculateCardPriceFromTransfer(transferPriceValue);
-        totalCarrito += cardPriceValue * item.cantidad;
+        totalCarrito += transferPriceValue * item.cantidad;
       });
       
       const pago = document.getElementById('pago')?.value || '';
-      if (pago === 'transferencia_directa') {
-        // Recalcular con precios de transferencia
-        totalCarrito = 0;
-        carrito.forEach((item) => {
-          const transferPriceValue = extractPriceValue(item.price);
-          totalCarrito += transferPriceValue * item.cantidad;
-        });
+      // Si es tarjeta, aplicar 25% más para la validación del cupón
+      if (pago === 'tarjeta') {
+        totalCarrito = Math.round((totalCarrito * 1.25) / 100) * 100;
       }
       
       // Preparar items para validación
@@ -1203,6 +1187,17 @@ Gracias!`);
       actualizarFormularioEnvio();
       renderCarrito();
     });
+
+    // Botón "Ver resumen" - hacer scroll al resumen
+    const btnVerResumen = document.getElementById('btn-ver-resumen');
+    if (btnVerResumen) {
+      btnVerResumen.addEventListener('click', () => {
+        const resumen = document.querySelector('.carrito-resumen');
+        if (resumen) {
+          resumen.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    }
 
       actualizarFormularioEnvio();
       renderCarrito();

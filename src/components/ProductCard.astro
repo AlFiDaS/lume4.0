@@ -77,15 +77,15 @@ if (priceMatch) {
   <div class="info">
     <h3>{name}</h3>
     <div class="price-container">
-      {cardPriceFormatted ? (
+      {transferPriceFormatted ? (
         <>
-          <p class="price">{cardPriceFormatted}</p>
-          <p class="price-card-text">hasta en 3 cuotas</p>
-          {transferPriceFormatted && (
+          <p class="price">{transferPriceFormatted}</p>
+          {cardPriceFormatted && (
             <p class="price-card">
-              <span class="price-label">Transferencia (-25%):</span> {transferPriceFormatted}
+              <span class="price-label">Mercado Pago / Tarjeta:</span> {cardPriceFormatted}
             </p>
           )}
+          <p class="price-card-text">hasta en 3 cuotas</p>
         </>
       ) : (
         <p class="price">N/A</p>
@@ -327,15 +327,16 @@ if (priceMatch) {
 
   .price-card {
     font-size: 0.85rem;
-    color: #666;
+    color: #999;
     margin: 0;
+    margin-bottom: 0.05rem;
     font-weight: 500;
     font-family: 'Inter', sans-serif;
   }
 
   .product-card .info .price-card .price-label {
     font-size: 0.85rem;
-    color: #666;
+    color: #999;
     margin-right: 0.25rem;
   }
 
@@ -344,7 +345,8 @@ if (priceMatch) {
     color: #999;
     font-weight: 400;
     display: block;
-    margin-top: 0.1rem;
+    margin-top: 0;
+    line-height: 1.1;
   }
 
   .btn-agregar {

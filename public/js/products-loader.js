@@ -131,7 +131,7 @@
             '';
         
         // El precio que viene de la BD es de transferencia
-        // Calcular precio de tarjeta para mostrar (principal) y precio de transferencia (secundario)
+        // Mostrar precio de transferencia como principal y precio de tarjeta como secundario
         const cardPrice = calculateCardPrice(product.price);
         // Formatear precio de transferencia (extraer número y formatear con separadores de miles)
         let transferPriceFormatted = '';
@@ -143,13 +143,13 @@
         }
         const priceHtml = product.price ? `
             <div class="price-container">
-                ${cardPrice ? `<p class="price">${escapeHtml(cardPrice)}</p>` : ''}
-                <p class="price-card-text">hasta en 3 cuotas</p>
-                ${transferPriceFormatted ? `
+                ${transferPriceFormatted ? `<p class="price">${escapeHtml(transferPriceFormatted)}</p>` : ''}
+                ${cardPrice ? `
                     <p class="price-card">
-                        <span class="price-label">Transferencia (-25%):</span> ${escapeHtml(transferPriceFormatted)}
+                        <span class="price-label">Mercado Pago / Tarjeta:</span> ${escapeHtml(cardPrice)}
                     </p>
                 ` : ''}
+                <p class="price-card-text">hasta en 3 cuotas</p>
             </div>
         ` : '<p class="price">N/A</p>';
         
