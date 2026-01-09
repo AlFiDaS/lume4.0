@@ -56,6 +56,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'stock_minimo' => !empty($_POST['stock_minimo']) ? (int)$_POST['stock_minimo'] : 5,
             'destacado' => isset($_POST['destacado']) ? 1 : 0,
             'visible' => isset($_POST['visible']) ? 1 : 0,
+            'en_descuento' => isset($_POST['en_descuento']) ? 1 : 0,
+            'precio_descuento' => sanitize($_POST['precio_descuento'] ?? ''),
             'image' => $product['image'],
             'hoverImage' => $product['hoverImage']
         ];
@@ -232,6 +234,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             destacado = :destacado,
                             categoria = :categoria,
                             visible = :visible,
+                            en_descuento = :en_descuento,
+                            precio_descuento = :precio_descuento,
                             updated_at = NOW()
                             WHERE id = :id";
                     
@@ -247,7 +251,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'stock_minimo' => $formData['stock_minimo'],
                         'destacado' => $formData['destacado'],
                         'categoria' => $formData['categoria'],
-                        'visible' => $formData['visible']
+                        'visible' => $formData['visible'],
+                        'en_descuento' => $formData['en_descuento'],
+                        'precio_descuento' => !empty($formData['precio_descuento']) ? $formData['precio_descuento'] : null
                     ];
                     
                     if (executeQuery($sql, $params)) {
@@ -356,6 +362,30 @@ $csrfToken = generateCSRFToken();
                         Las categorías ocultas están disponibles aquí para poder editar productos.
                     </small>
                 </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="checkbox-modern">
+                    <input type="checkbox" id="en_descuento" name="en_descuento"
+                           <?= ($formData['en_descuento'] ?? 0) ? 'checked' : '' ?>
+                           onchange="togglePrecioDescuento()">
+                    <span class="checkmark"></span>
+                    <div>
+                        <strong>🏷️ En Descuento</strong>
+                        <small>Activar precio en descuento para este producto</small>
+                    </div>
+                </label>
+            </div>
+            
+            <div id="precio-descuento-group" class="form-group" style="display: <?= ($formData['en_descuento'] ?? 0) ? 'block' : 'none' ?>;">
+                <label for="precio_descuento">Precio en Descuento</label>
+                <div class="input-with-icon">
+                    <span class="input-icon">$</span>
+                    <input type="text" id="precio_descuento" name="precio_descuento" 
+                           value="<?= htmlspecialchars(preg_replace('/[^\d]/', '', $formData['precio_descuento'] ?? '')) ?>"
+                           placeholder="2000">
+                </div>
+                <small>Escribe solo el número del precio en descuento (ej: 2000). El precio anterior se mostrará tachado.</small>
             </div>
         </div>
         
@@ -549,6 +579,7 @@ document.getElementById('slug').addEventListener('input', function(e) {
 // Formatear precio automáticamente - Solo números (el $ es visual)
 (function() {
     const priceInput = document.getElementById('price');
+    const precioDescuentoInput = document.getElementById('precio_descuento');
     
     // Función para limpiar y dejar solo números
     function cleanPrice(value) {
@@ -571,7 +602,40 @@ document.getElementById('slug').addEventListener('input', function(e) {
         const cleaned = cleanPrice(currentValue);
         priceInput.value = cleaned;
     }
+    
+    // Formatear precio de descuento automáticamente
+    if (precioDescuentoInput) {
+        precioDescuentoInput.addEventListener('input', function(e) {
+            e.target.value = cleanPrice(e.target.value);
+        });
+        
+        precioDescuentoInput.addEventListener('blur', function(e) {
+            e.target.value = cleanPrice(e.target.value);
+        });
+        
+        // Limpiar precio de descuento al cargar si tiene caracteres no numéricos
+        const currentDescuentoValue = precioDescuentoInput.value;
+        if (currentDescuentoValue) {
+            const cleanedDescuento = cleanPrice(currentDescuentoValue);
+            precioDescuentoInput.value = cleanedDescuento;
+        }
+    }
 })();
+
+// Mostrar/ocultar campo de precio de descuento
+function togglePrecioDescuento() {
+    const checkbox = document.getElementById('en_descuento');
+    const precioDescuentoGroup = document.getElementById('precio-descuento-group');
+    const precioDescuentoInput = document.getElementById('precio_descuento');
+    if (checkbox && precioDescuentoGroup) {
+        precioDescuentoGroup.style.display = checkbox.checked ? 'block' : 'none';
+        if (checkbox.checked && precioDescuentoInput) {
+            precioDescuentoInput.focus();
+        } else if (precioDescuentoInput && !checkbox.checked) {
+            precioDescuentoInput.value = '';
+        }
+    }
+}
 
 // Preview de nuevas imágenes
 document.getElementById('image').addEventListener('change', function(e) {

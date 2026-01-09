@@ -130,28 +130,66 @@
             `onmouseover="this.src='${escapeHtml(hoverImage)}'" onmouseout="this.src='${escapeHtml(imageSrc)}'"` : 
             '';
         
-        // El precio que viene de la BD es de transferencia
-        // Mostrar precio de transferencia como principal y precio de tarjeta como secundario
-        const cardPrice = calculateCardPrice(product.price);
-        // Formatear precio de transferencia (extraer número y formatear con separadores de miles)
-        let transferPriceFormatted = '';
-        if (product.price) {
-            const transferPriceValue = extractPriceValue(product.price);
-            if (transferPriceValue > 0) {
-                transferPriceFormatted = '$' + transferPriceValue.toLocaleString('es-AR');
+        // Verificar si hay descuento
+        const hasDiscount = product.en_descuento === 1 || product.en_descuento === '1';
+        const discountPrice = product.precio_descuento;
+        
+        let priceHtml = '';
+        let discountBadgeHtml = '';
+        
+        if (hasDiscount && discountPrice) {
+            // Producto en descuento: mostrar badge en imagen y precio de descuento
+            const originalTransferPrice = extractPriceValue(product.price);
+            const discountTransferPrice = extractPriceValue(discountPrice);
+            const originalTransferFormatted = originalTransferPrice > 0 ? '$' + originalTransferPrice.toLocaleString('es-AR') : '';
+            const discountTransferFormatted = discountTransferPrice > 0 ? '$' + discountTransferPrice.toLocaleString('es-AR') : '';
+            
+            // Calcular precio de tarjeta del precio en descuento
+            const discountCardPrice = discountTransferPrice > 0 ? Math.round((discountTransferPrice * 1.25) / 100) * 100 : 0;
+            const discountCardFormatted = discountCardPrice > 0 ? '$' + discountCardPrice.toLocaleString('es-AR') : '';
+            
+            // Badge para la imagen
+            discountBadgeHtml = `
+                <div class="discount-badge">
+                    <span class="discount-badge-label">ANTES:</span>
+                    <span class="discount-badge-value">${escapeHtml(originalTransferFormatted)}</span>
+                </div>
+            `;
+            
+            priceHtml = `
+                <div class="price-container">
+                    ${discountTransferFormatted ? `<p class="price">${escapeHtml(discountTransferFormatted)}</p>` : ''}
+                    ${discountCardFormatted ? `
+                        <p class="price-card">
+                            <span class="price-label">Mercado Pago / Tarjeta:</span> ${escapeHtml(discountCardFormatted)}
+                        </p>
+                    ` : ''}
+                    <p class="price-card-text">hasta en 3 cuotas</p>
+                </div>
+            `;
+        } else {
+            // Producto normal: mostrar precio de transferencia como principal y precio de tarjeta como secundario
+            const cardPrice = calculateCardPrice(product.price);
+            // Formatear precio de transferencia (extraer número y formatear con separadores de miles)
+            let transferPriceFormatted = '';
+            if (product.price) {
+                const transferPriceValue = extractPriceValue(product.price);
+                if (transferPriceValue > 0) {
+                    transferPriceFormatted = '$' + transferPriceValue.toLocaleString('es-AR');
+                }
             }
+            priceHtml = product.price ? `
+                <div class="price-container">
+                    ${transferPriceFormatted ? `<p class="price">${escapeHtml(transferPriceFormatted)}</p>` : ''}
+                    ${cardPrice ? `
+                        <p class="price-card">
+                            <span class="price-label">Mercado Pago / Tarjeta:</span> ${escapeHtml(cardPrice)}
+                        </p>
+                    ` : ''}
+                    <p class="price-card-text">hasta en 3 cuotas</p>
+                </div>
+            ` : '<p class="price">N/A</p>';
         }
-        const priceHtml = product.price ? `
-            <div class="price-container">
-                ${transferPriceFormatted ? `<p class="price">${escapeHtml(transferPriceFormatted)}</p>` : ''}
-                ${cardPrice ? `
-                    <p class="price-card">
-                        <span class="price-label">Mercado Pago / Tarjeta:</span> ${escapeHtml(cardPrice)}
-                    </p>
-                ` : ''}
-                <p class="price-card-text">hasta en 3 cuotas</p>
-            </div>
-        ` : '<p class="price">N/A</p>';
         
         const productId = product.id || product.slug;
         
@@ -174,6 +212,7 @@
                             onerror="if(this.src!=='${placeholderPath}'){this.onerror=null;this.src='${placeholderPath}';}else{this.style.display='none';}"
                         />
                     </a>
+                    ${discountBadgeHtml}
                     <button 
                         class="wishlist-btn" 
                         data-wishlist-id="${escapeHtml(productId)}"
@@ -191,7 +230,7 @@
                     ${priceHtml}
                     <button 
                         class="btn-agregar" 
-                        onclick="agregarAlCarrito('${escapeHtml(product.name)}', '${escapeHtml(product.price)}', '${product.image}', '${product.slug}', '${product.categoria}')"
+                        onclick="agregarAlCarrito('${escapeHtml(product.name)}', '${escapeHtml(hasDiscount && discountPrice ? discountPrice : product.price)}', '${product.image}', '${product.slug}', '${product.categoria}')"
                         ${disabledAttr}
                     >
                         ${stockText}

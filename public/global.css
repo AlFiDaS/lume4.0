@@ -838,6 +838,45 @@ img {
   z-index: 2;
 }
 
+/* Badge de descuento en la esquina superior izquierda */
+.product-card .discount-badge {
+  position: absolute;
+  top: var(--space-sm);
+  left: var(--space-sm);
+  background: rgba(255, 255, 255, 0.95);
+  color: #800020;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.75rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(10px);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.discount-badge-label {
+  font-weight: 700;
+  color: #800020;
+}
+
+.discount-badge-value {
+  text-decoration: line-through;
+  color: #800020;
+  opacity: 0.8;
+}
+
+@media (max-width: 600px) {
+  .product-card .discount-badge {
+    font-size: 0.65rem;
+    padding: 0.3rem 0.5rem;
+    gap: 0.25rem;
+  }
+}
+
 .product-card .info {
   padding: var(--space-xs);
   display: flex;
@@ -971,7 +1010,7 @@ img {
 }
 
 .product-card .info .price-card .price-label {
-  font-size: 0.85rem;
+  font-size: 0.7rem;
   color: #999;
   margin-right: 0.25rem;
 }
@@ -991,7 +1030,7 @@ img {
   }
   
   .product-card .info .price-card .price-label {
-    font-size: 0.7rem;
+    font-size: 0.6rem;
   }
   
   .product-card .info .price-card-text {
@@ -1001,11 +1040,11 @@ img {
 
 @media (max-width: 600px) {
   .product-card .info .price-card {
-    font-size: 0.7rem;
+    font-size: 0.6rem;
   }
   
   .product-card .info .price-card .price-label {
-    font-size: 0.7rem;
+    font-size: 0.6rem;
   }
   
   .product-card .info .price-card-text {
@@ -1133,11 +1172,11 @@ img {
   }
   
   .product-card .info .price-card {
-    font-size: 0.7rem;
+    font-size: 0.6rem;
   }
   
   .product-card .info .price-card .price-label {
-    font-size: 0.7rem;
+    font-size: 0.6rem;
   }
   
   .product-card .info .price-card-text {
@@ -2280,6 +2319,50 @@ div.breadcrumb .current {
   line-height: 1.1;
 }
 
+/* Precio anterior (tachado) para productos en descuento */
+.price-before {
+  margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #999;
+}
+
+.price-before-label {
+  font-weight: 600;
+  color: #999;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.price-before-value {
+  text-decoration: line-through;
+  color: #999;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.price-before-detail {
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #999;
+}
+
+.price-before-label-detail {
+  font-weight: 600;
+  color: #999;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.price-before-value-detail {
+  text-decoration: line-through;
+  color: #999;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 1.2rem;
+}
+
 .price-card-note {
   font-size: 0.75rem;
   color: #999;
@@ -2484,6 +2567,47 @@ div.breadcrumb .current {
     font-size: 1.1rem;
     bottom: var(--space-sm);
     right: var(--space-sm);
+  }
+}
+
+/* Badge de descuento en la imagen principal del detalle */
+.main-image .discount-badge-detail {
+  position: absolute;
+  top: 1.25rem;
+  left: 1.25rem;
+  background: rgba(255, 255, 255, 0.95);
+  color: #800020;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.85rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(10px);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.main-image .discount-badge-detail .discount-badge-label {
+  font-weight: 700;
+  color: #800020;
+}
+
+.main-image .discount-badge-detail .discount-badge-value {
+  text-decoration: line-through;
+  color: #800020;
+  opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+  .main-image .discount-badge-detail {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.6rem;
+    gap: 0.3rem;
+    top: 0.75rem;
+    left: 0.75rem;
   }
 }
 

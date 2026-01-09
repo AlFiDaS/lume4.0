@@ -57,7 +57,7 @@ try {
     }
     
     // Construir consulta con filtros
-    $sql = "SELECT id, slug, name, descripcion, price, image, hoverImage, stock, destacado, categoria 
+    $sql = "SELECT id, slug, name, descripcion, price, image, hoverImage, stock, destacado, categoria, en_descuento, precio_descuento 
             FROM products 
             WHERE visible = 1";
     
