@@ -144,15 +144,24 @@
             const originalTransferFormatted = originalTransferPrice > 0 ? '$' + originalTransferPrice.toLocaleString('es-AR') : '';
             const discountTransferFormatted = discountTransferPrice > 0 ? '$' + discountTransferPrice.toLocaleString('es-AR') : '';
             
+            // Calcular porcentaje de descuento
+            let discountPercentage = 0;
+            if (originalTransferPrice > 0 && discountTransferPrice > 0) {
+                discountPercentage = Math.round(((originalTransferPrice - discountTransferPrice) / originalTransferPrice) * 100);
+            }
+            
             // Calcular precio de tarjeta del precio en descuento
             const discountCardPrice = discountTransferPrice > 0 ? Math.round((discountTransferPrice * 1.25) / 100) * 100 : 0;
             const discountCardFormatted = discountCardPrice > 0 ? '$' + discountCardPrice.toLocaleString('es-AR') : '';
             
-            // Badge para la imagen
+            // Badges para la imagen
             discountBadgeHtml = `
                 <div class="discount-badge">
                     <span class="discount-badge-label">ANTES:</span>
                     <span class="discount-badge-value">${escapeHtml(originalTransferFormatted)}</span>
+                </div>
+                <div class="discount-percentage-badge">
+                    - ${discountPercentage}%
                 </div>
             `;
             

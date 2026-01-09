@@ -117,11 +117,22 @@
         let discountBadgeHtml = '';
         if (hasDiscount && discountPrice) {
             const originalTransferPrice = extractPriceValue(product.price);
+            const discountTransferPrice = extractPriceValue(discountPrice);
             const originalTransferFormatted = originalTransferPrice > 0 ? '$' + originalTransferPrice.toLocaleString('es-AR') : '';
+            
+            // Calcular porcentaje de descuento
+            let discountPercentage = 0;
+            if (originalTransferPrice > 0 && discountTransferPrice > 0) {
+                discountPercentage = Math.round(((originalTransferPrice - discountTransferPrice) / originalTransferPrice) * 100);
+            }
+            
             discountBadgeHtml = `
                 <div class="discount-badge-detail">
                     <span class="discount-badge-label">ANTES:</span>
                     <span class="discount-badge-value">${escapeHtml(originalTransferFormatted)}</span>
+                </div>
+                <div class="discount-percentage-badge-detail">
+                    - ${discountPercentage}%
                 </div>
             `;
         }
@@ -271,22 +282,14 @@
                     })()}
                 </div>
                 
-                <div class="producto-details">
-                    ${product.categoria === 'souvenirs' ? `
+                ${product.categoria === 'souvenirs' ? `
+                    <div class="producto-details">
                         <div class="detail-item">
                             <span class="detail-icon">📦</span>
                             <span class="detail-text">Cantidad mínima: 10 unidades</span>
                         </div>
-                    ` : ''}
-                    <div class="detail-item">
-                        <span class="detail-icon">💳</span>
-                        <span class="detail-text">Tarjeta de crédito: Hasta 3 cuotas sin interés</span>
                     </div>
-                    <div class="detail-item">
-                        <span class="detail-icon">💰</span>
-                        <span class="detail-text">Transferencia: 25% de descuento</span>
-                    </div>
-                </div>
+                ` : ''}
                 
                 <div class="producto-actions">
                     ${stockButton}

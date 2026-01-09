@@ -869,11 +869,35 @@ img {
   opacity: 0.8;
 }
 
+/* Badge de porcentaje de descuento en la parte inferior izquierda */
+.product-card .discount-percentage-badge {
+  position: absolute;
+  bottom: var(--space-sm);
+  left: var(--space-sm);
+  background: rgba(255, 255, 255, 0.95);
+  color: #800020;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.75rem;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(10px);
+  z-index: 3;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
 @media (max-width: 600px) {
   .product-card .discount-badge {
     font-size: 0.65rem;
     padding: 0.3rem 0.5rem;
     gap: 0.25rem;
+  }
+  
+  .product-card .discount-percentage-badge {
+    font-size: 0.65rem;
+    padding: 0.3rem 0.5rem;
+    bottom: 0.5rem;
+    left: 0.5rem;
   }
 }
 
@@ -2601,6 +2625,23 @@ div.breadcrumb .current {
   opacity: 0.8;
 }
 
+/* Badge de porcentaje de descuento en la parte inferior izquierda del detalle */
+.main-image .discount-percentage-badge-detail {
+  position: absolute;
+  bottom: var(--space-md);
+  left: var(--space-md);
+  background: rgba(255, 255, 255, 0.95);
+  color: #800020;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.85rem;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(10px);
+  z-index: 3;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
 @media (max-width: 768px) {
   .main-image .discount-badge-detail {
     font-size: 0.75rem;
@@ -2608,6 +2649,13 @@ div.breadcrumb .current {
     gap: 0.3rem;
     top: 0.75rem;
     left: 0.75rem;
+  }
+  
+  .main-image .discount-percentage-badge-detail {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.6rem;
+    bottom: var(--space-sm);
+    left: var(--space-sm);
   }
 }
 
