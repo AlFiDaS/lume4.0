@@ -155,14 +155,15 @@
             const discountCardFormatted = discountCardPrice > 0 ? '$' + discountCardPrice.toLocaleString('es-AR') : '';
             
             // Badges para la imagen
+            // Solo mostrar el badge de porcentaje si hay stock
             discountBadgeHtml = `
                 <div class="discount-badge">
                     <span class="discount-badge-label">ANTES:</span>
                     <span class="discount-badge-value">${escapeHtml(originalTransferFormatted)}</span>
                 </div>
-                <div class="discount-percentage-badge">
+                ${hasStock ? `<div class="discount-percentage-badge">
                     - ${discountPercentage}%
-                </div>
+                </div>` : ''}
             `;
             
             priceHtml = `

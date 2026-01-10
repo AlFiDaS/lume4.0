@@ -825,7 +825,7 @@ img {
 
 .product-card .sin-stock {
   position: absolute;
-  top: var(--space-sm);
+  bottom: var(--space-sm);
   left: var(--space-sm);
   background: linear-gradient(135deg, #ff4757, #ff3742);
   color: #fff;
@@ -836,6 +836,15 @@ img {
   box-shadow: var(--shadow-sm);
   backdrop-filter: blur(10px);
   z-index: 2;
+}
+
+@media (max-width: 600px) {
+  .product-card .sin-stock {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.5rem;
+    bottom: 0.5rem;
+    left: 0.5rem;
+  }
 }
 
 /* Badge de descuento en la esquina superior izquierda */
