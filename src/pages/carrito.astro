@@ -91,8 +91,8 @@ import Breadcrumb from '../components/Breadcrumb.astro';
                   <select id="envio" required>
                     <option value="Corrientes Envio a Domicilio">Envío a Domicilio - Corrientes, Capital</option>
                     <option value="Corrientes Retiro en Sucursal">Retiro sin costo por Pasaje Alvarez 873 - Corrientes, Capital</option>
-                    <option value="Correo Argentino - Sucursal">Correo Argentino - Retiro en Sucursal ($6500)</option>
-                    <option value="Correo Argentino - Domicilio">Correo Argentino - Envío a Domicilio ($8500)</option>
+                    <option value="Correo Argentino - Sucursal">Correo Argentino - Retiro en Sucursal ($8.100)</option>
+                    <option value="Correo Argentino - Domicilio">Correo Argentino - Envío a Domicilio ($10.600)</option>
                   </select>
                 </div>
 
@@ -141,7 +141,7 @@ import Breadcrumb from '../components/Breadcrumb.astro';
                 <div class="form-group">
                   <label for="pago">Forma de pago</label>
                   <select id="pago">
-                    <option value="transferencia_directa" selected>Transferencia (25% descuento)</option>
+                    <option value="transferencia_directa" selected>Transferencia</option>
                     <option value="tarjeta">Mercadopago o tarjeta - Mismo precio hasta en 3 cuotas</option>
                   </select>
                 </div>
@@ -441,7 +441,11 @@ import Breadcrumb from '../components/Breadcrumb.astro';
 
         // El precio guardado es de transferencia, mostrarlo directamente
         const transferPriceValue = extractPriceValue(item.price);
-        const priceFormatted = '$' + transferPriceValue.toLocaleString('es-AR');
+        const transferPriceFormatted = '$' + transferPriceValue.toLocaleString('es-AR');
+        
+        // Calcular precio de tarjeta (25% más, redondeado al 100)
+        const cardPriceValue = calculateCardPriceFromTransfer(transferPriceValue);
+        const cardPriceFormatted = '$' + cardPriceValue.toLocaleString('es-AR');
 
         card.innerHTML = `
           <div class="producto-imagen" onclick="window.location.href='/${item.categoria}/${item.slug}'">
@@ -449,12 +453,21 @@ import Breadcrumb from '../components/Breadcrumb.astro';
           </div>
           <div class="producto-info">
             <h3>${item.name}</h3>
-            <div class="producto-precio-cantidad">
-              <p class="producto-precio">${priceFormatted}</p>
-              <div class="cantidad-controles">
-                <button class="btn-cantidad menos" data-slug="${item.slug}">−</button>
-                <span class="cantidad">${item.cantidad}</span>
-                <button class="btn-cantidad mas" data-slug="${item.slug}">+</button>
+            <div class="producto-precio-lista">
+              <div class="precio-lista-wrapper">
+                <span class="precio-lista-label">Precio lista:</span>
+                <span class="precio-lista-value">${cardPriceFormatted}</span>
+              </div>
+            </div>
+            <div class="producto-precio-transferencia">
+              <span class="transferencia-label">Transferencia:</span>
+              <div class="transferencia-precio-cantidad">
+                <span class="transferencia-value">${transferPriceFormatted}</span>
+                <div class="cantidad-controles">
+                  <button class="btn-cantidad menos" data-slug="${item.slug}">−</button>
+                  <span class="cantidad">${item.cantidad}</span>
+                  <button class="btn-cantidad mas" data-slug="${item.slug}">+</button>
+                </div>
               </div>
             </div>
             <button data-slug="${item.slug}" class="btn-remove">Eliminar</button>
@@ -505,7 +518,7 @@ import Breadcrumb from '../components/Breadcrumb.astro';
         // Si elige tarjeta, aplicar 25% más al subtotal (redondeado al 100)
         subtotalCalculado = Math.round((totalCarrito * 1.25) / 100) * 100;
         // También aplicar 25% más al envío (redondeado al 100)
-        envioCalculado = Math.round((envioCosto * 1.25) / 100) * 100;
+        envioCalculado = envioCosto > 0 ? Math.round((envioCosto * 1.25) / 100) * 100 : 0;
       }
       // Si es transferencia directa, el precio ya es el de transferencia (sin cambios)
       
@@ -594,7 +607,7 @@ import Breadcrumb from '../components/Breadcrumb.astro';
         datosCliente += `\nProvincia: ${get('provincia')}\nLocalidad: ${get('localidad')}\nDirección: ${get('direccion')}\nCP: ${get('cp')}\nEmail: ${get('email')}\nObservaciones: ${get('observaciones')}`;
       }
 
-      let metodoPagoTexto = 'Transferencia (25% descuento)';
+      let metodoPagoTexto = 'Transferencia';
       if (pago === 'tarjeta') {
         metodoPagoTexto = 'Mercadopago o tarjeta - Mismo precio hasta en 3 cuotas';
       }
