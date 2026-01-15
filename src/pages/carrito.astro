@@ -87,13 +87,36 @@ import Breadcrumb from '../components/Breadcrumb.astro';
                 </div>
 
                 <div class="form-group">
-                  <label for="envio">Tipo de envío *</label>
-                  <select id="envio" required>
-                    <option value="Corrientes Envio a Domicilio">Envío a Domicilio - Corrientes, Capital</option>
-                    <option value="Corrientes Retiro en Sucursal">Retiro sin costo por Pasaje Alvarez 873 - Corrientes, Capital</option>
-                    <option value="Correo Argentino - Sucursal">Correo Argentino - Retiro en Sucursal ($8.100)</option>
-                    <option value="Correo Argentino - Domicilio">Correo Argentino - Envío a Domicilio ($10.600)</option>
-                  </select>
+                  <label>Tipo de envío *</label>
+                  <div class="envio-options">
+                    <label class="envio-option">
+                      <input type="radio" name="envio" value="Corrientes Envio a Domicilio" required />
+                      <span class="envio-option-content">
+                        <span class="envio-option-text">Envío a domicilio - Corrientes, Capital</span>
+                      </span>
+                    </label>
+                    <label class="envio-option">
+                      <input type="radio" name="envio" value="Corrientes Retiro en Sucursal" required />
+                      <span class="envio-option-content">
+                        <span class="envio-option-text">Retiro por Pje. Alvarez 873 (Corrientes)</span>
+                        <span class="envio-gratis">- Gratis</span>
+                      </span>
+                    </label>
+                    <label class="envio-option">
+                      <input type="radio" name="envio" value="Correo Argentino - Sucursal" required />
+                      <span class="envio-option-content">
+                        <span class="envio-option-text">Correo Argentino - Envío a Sucursal</span>
+                        <span class="envio-precio" data-precio-transferencia="6500" data-precio-tarjeta="8100">($8.100)</span>
+                      </span>
+                    </label>
+                    <label class="envio-option">
+                      <input type="radio" name="envio" value="Correo Argentino - Domicilio" required />
+                      <span class="envio-option-content">
+                        <span class="envio-option-text">Correo Argentino - Envío a Domicilio</span>
+                        <span class="envio-precio" data-precio-transferencia="8500" data-precio-tarjeta="10600">($10.600)</span>
+                      </span>
+                    </label>
+                  </div>
                 </div>
 
                 <div class="form-group" id="label-provincia" style="display: none;">
@@ -236,7 +259,8 @@ import Breadcrumb from '../components/Breadcrumb.astro';
       }
 
       function actualizarFormularioEnvio() {
-      const tipoEnvio = document.getElementById('envio').value;
+      const envioRadio = document.querySelector('input[name="envio"]:checked');
+      const tipoEnvio = envioRadio ? envioRadio.value : '';
       const mostrar = id => document.getElementById(id).style.display = 'block';
       const ocultar = id => document.getElementById(id).style.display = 'none';
 
@@ -253,6 +277,24 @@ import Breadcrumb from '../components/Breadcrumb.astro';
         ['label-provincia', 'label-localidad', 'label-cp', 'label-direccion', 'label-email', 'label-observaciones']
           .forEach(mostrar);
       }
+    }
+
+    // Función para actualizar precios de envío según método de pago
+    function actualizarPreciosEnvio() {
+      const pago = document.getElementById('pago')?.value || '';
+      const isTransferencia = (pago === 'transferencia_directa');
+      
+      const precioElements = document.querySelectorAll('.envio-precio');
+      precioElements.forEach(el => {
+        const precioTransferencia = el.getAttribute('data-precio-transferencia');
+        const precioTarjeta = el.getAttribute('data-precio-tarjeta');
+        
+        if (precioTransferencia && precioTarjeta) {
+          const precioMostrar = isTransferencia ? precioTransferencia : precioTarjeta;
+          const precioFormateado = '$' + parseInt(precioMostrar).toLocaleString('es-AR');
+          el.textContent = `(${precioFormateado})`;
+        }
+      });
     }
 
     // Función para extraer el valor numérico del precio (remueve $, puntos, comas, etc.)
@@ -479,7 +521,13 @@ import Breadcrumb from '../components/Breadcrumb.astro';
         totalCarrito += transferPriceValue * item.cantidad;
       });
 
-      const get = id => document.getElementById(id)?.value || '';
+      const get = id => {
+        if (id === 'envio') {
+          const envioRadio = document.querySelector('input[name="envio"]:checked');
+          return envioRadio ? envioRadio.value : '';
+        }
+        return document.getElementById(id)?.value || '';
+      };
       const nombre = get('nombre');
       const pago = get('pago');
       const envio = get('envio');
@@ -682,13 +730,13 @@ Gracias!`);
       const formData = {
         items: items,
         payer: payer,
-        shipping: {
-          type: document.getElementById('envio')?.value || '',
-          address: document.getElementById('direccion')?.value || '',
-          province: document.getElementById('provincia')?.value || '',
-          locality: document.getElementById('localidad')?.value || '',
-          postal_code: document.getElementById('cp')?.value || ''
-        },
+         shipping: {
+           type: (document.querySelector('input[name="envio"]:checked')?.value || ''),
+           address: document.getElementById('direccion')?.value || '',
+           province: document.getElementById('provincia')?.value || '',
+           locality: document.getElementById('localidad')?.value || '',
+           postal_code: document.getElementById('cp')?.value || ''
+         },
         payment_method: document.getElementById('pago')?.value || 'transferencia',
         notes: document.getElementById('aclaraciones')?.value || ''
       };
@@ -866,13 +914,14 @@ Gracias!`);
           totalCarrito += extractPriceValueLocal(item.price) * item.cantidad;
         });
         
-        const envio = document.getElementById('envio')?.value || '';
-        let envioCosto = 0;
-        if (envio.includes('Correo Argentino - Sucursal')) {
-          envioCosto = 6500;
-        } else if (envio.includes('Correo Argentino - Domicilio')) {
-          envioCosto = 8500;
-        }
+         const envioRadio = document.querySelector('input[name="envio"]:checked');
+         const envio = envioRadio ? envioRadio.value : '';
+         let envioCosto = 0;
+         if (envio.includes('Correo Argentino - Sucursal')) {
+           envioCosto = 6500;
+         } else if (envio.includes('Correo Argentino - Domicilio')) {
+           envioCosto = 8500;
+         }
         
         // Aplicar descuento de cupón si existe (revalidar primero para obtener el descuento actualizado)
         const couponData = JSON.parse(localStorage.getItem('applied_coupon') || 'null');
@@ -1195,10 +1244,22 @@ Gracias!`);
     }, 100);
 
     document.getElementById("form-datos").addEventListener("input", renderCarrito);
-    document.getElementById("pago").addEventListener("change", renderCarrito);
-    document.getElementById("envio").addEventListener("change", () => {
-      actualizarFormularioEnvio();
-      renderCarrito();
+    
+    // Event listener para método de pago (actualizar precios de envío)
+    const pagoSelect = document.getElementById("pago");
+    if (pagoSelect) {
+      pagoSelect.addEventListener("change", () => {
+        actualizarPreciosEnvio();
+        renderCarrito();
+      });
+    }
+    
+    // Event listeners para radio buttons de envío
+    document.querySelectorAll('input[name="envio"]').forEach(radio => {
+      radio.addEventListener("change", () => {
+        actualizarFormularioEnvio();
+        renderCarrito();
+      });
     });
 
     // Botón "Ver resumen" - hacer scroll al resumen
@@ -1213,6 +1274,7 @@ Gracias!`);
     }
 
       actualizarFormularioEnvio();
+      actualizarPreciosEnvio();
       renderCarrito();
     }
 

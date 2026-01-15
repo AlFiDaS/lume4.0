@@ -1314,6 +1314,126 @@ img {
   min-height: 60px;
 }
 
+/* Estilos para opciones de envío con radio buttons */
+.envio-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+.envio-option {
+  position: relative;
+  display: block;
+  padding: 1rem 1.25rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  background: #fafafa;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.envio-option:hover {
+  border-color: #e0a4ce;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(224, 164, 206, 0.15);
+  transform: translateY(-1px);
+}
+
+.envio-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  width: 0;
+  height: 0;
+}
+
+.envio-option-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.75rem;
+  position: relative;
+  padding-left: 2.5rem;
+}
+
+.envio-option-content::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2.5px solid #ccc;
+  background: #fff;
+  transition: all 0.25s ease;
+  box-sizing: border-box;
+}
+
+.envio-option:hover .envio-option-content::before {
+  border-color: #e0a4ce;
+}
+
+.envio-option input[type="radio"]:checked + .envio-option-content::before {
+  background: linear-gradient(135deg, #e0a4ce, #f7d4ed);
+  border-color: #e0a4ce;
+  box-shadow: 0 0 0 4px rgba(224, 164, 206, 0.15);
+}
+
+.envio-option input[type="radio"]:checked + .envio-option-content::after {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.envio-option:has(input[type="radio"]:checked) {
+  border-color: #e0a4ce;
+  background: linear-gradient(135deg, #fef7ff, #fff);
+  box-shadow: 0 4px 16px rgba(224, 164, 206, 0.25);
+}
+
+.envio-option-text {
+  flex: 1;
+  font-size: 0.9375rem;
+  color: #2c2c2c;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.envio-option:has(input[type="radio"]:checked) .envio-option-text {
+  color: #2c2c2c;
+  font-weight: 600;
+}
+
+.envio-gratis {
+  color: #28a745;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  white-space: nowrap;
+}
+
+.envio-precio {
+  color: #555;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 
 
 .btn-finalizar {
